@@ -1,8 +1,12 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
+import DashboardShell from "./DashboardShell";
+import ReportsDashboard from "./ReportsDashboard";
+import AIAssistant from "./AIAssistant";
+import SelfClockInOut from "./SelfClockInOut";
 
-export default function ManagerDashboard() {
+function ManagerOverview() {
   const [stats, setStats] = useState({
     students: 0,
     classes: 0,
@@ -38,9 +42,14 @@ export default function ManagerDashboard() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-        <h2 className="text-2xl font-black text-[#1a3a8f]">Manager Command Center</h2>
-        <p className="text-sm text-slate-500 mt-1">Real-time overview of school operations.</p>
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-black text-[#1a3a8f]">Manager Command Center</h2>
+          <p className="text-sm text-slate-500 mt-1">Real-time overview of school operations.</p>
+        </div>
+        <div className="w-full md:w-64">
+          <SelfClockInOut />
+        </div>
       </div>
 
       {loading ? (
@@ -55,25 +64,9 @@ export default function ManagerDashboard() {
           <StatCard label="Staff Members" value={stats.staff} color="bg-rose-50 text-rose-700 border-rose-100" />
         </div>
       )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <h3 className="font-bold text-slate-800 mb-4">Punctuality Overview</h3>
-          <div className="h-40 flex items-center justify-center bg-slate-50 rounded-xl border border-dashed border-slate-300">
-            <p className="text-xs text-slate-400 italic text-center px-10">
-              Detailed attendance charts will appear here as shift data is recorded.
-            </p>
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <h3 className="font-bold text-slate-800 mb-4">Quick Links</h3>
-          <div className="space-y-2">
-            <p className="text-xs text-slate-500">For detailed reports, please use the main Admin Panel.</p>
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs font-bold text-slate-600">
-              📌 Manager Tip: Check the "Pending Apps" daily to ensure marketing is following up!
-            </div>
-          </div>
-        </div>
+      
+      <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-center text-slate-500 text-sm">
+        Use the <strong>Reports</strong> tab for detailed punctuality and analytics.
       </div>
     </div>
   );
@@ -86,4 +79,14 @@ function StatCard({ label, value, color }) {
       <p className="text-3xl font-black mt-2">{value}</p>
     </div>
   );
+}
+
+export default function ManagerDashboard() {
+  const tabs = [
+    { id: "overview", label: "🏠 Overview", component: <ManagerOverview /> },
+    { id: "reports", label: "📊 Reports & Analytics", component: <ReportsDashboard isAdminView={false} isManagerView={true} /> },
+    { id: "ai", label: "✨ AI Assistant", component: <AIAssistant /> },
+  ];
+
+  return <DashboardShell tabs={tabs} defaultTab="overview" />;
 }

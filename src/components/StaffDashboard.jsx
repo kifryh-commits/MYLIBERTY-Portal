@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
+import SelfClockInOut from "./SelfClockInOut";
 
 export default function StaffDashboard() {
   const [leadCount, setLeadCount] = useState(0);
@@ -39,8 +40,11 @@ export default function StaffDashboard() {
       <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
         <h3 className="font-bold text-slate-800 text-sm">Attendance Reminder</h3>
         <p className="text-xs text-slate-500 leading-relaxed">
-          Use the front-desk Kiosk to clock in and out — this keeps attendance tied to actually being on site.
+          Use the widget below to clock in and out — this keeps attendance tied to actually being on site.
         </p>
+        <div className="pt-2">
+          <SelfClockInOut />
+        </div>
       </div>
       
       <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-center">

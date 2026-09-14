@@ -14,7 +14,7 @@ export default function DashboardShell({ tabs, defaultTab }) {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`p-2.5 rounded-lg text-left font-semibold text-xs whitespace-nowrap transition ${
-              activeTab === tab.id ? "bg-red-600 text-white" : "bg-white text-gray-700 border"
+              activeTab === tab.id ? "bg-[#1a3a8f] text-white shadow-sm" : "bg-white text-gray-700 border hover:bg-slate-50"
             }`}
           >
             {tab.label}

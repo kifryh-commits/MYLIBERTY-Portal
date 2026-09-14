@@ -358,7 +358,7 @@ export default function AdminDashboard({ isFrontOffice = false }) {
               className="w-full p-2.5 border rounded-lg mb-3 text-sm"
             />
             <div className="flex gap-1.5 mb-4 flex-wrap text-[10px] font-bold">
-              {["all", "instructor", "marketing", "frontoffice"].map(r => (
+              {["all", "instructor", "manager", "marketing", "frontoffice"].map(r => (
                 <button key={r} onClick={() => setFilterRole(r)} className={`px-3 py-1.5 rounded-lg transition uppercase ${filterRole === r ? "bg-[#1a3a8f] text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>{r}</button>
               ))}
             </div>

@@ -40,6 +40,7 @@ export default function InvitesPanel({ invites, onCreateInvite, onDeleteInvite }
           className="p-2.5 border rounded-lg bg-white font-bold text-sm"
         >
           <option value="instructor">Instructor</option>
+          <option value="manager">Manager</option>
           <option value="marketing">Marketing Staff</option>
           <option value="frontoffice">Front Office</option>
           <option value="officeboy">Office Boy</option>

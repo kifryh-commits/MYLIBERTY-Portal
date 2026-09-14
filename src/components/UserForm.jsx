@@ -35,6 +35,7 @@ export default function UserForm({ formData, setFormData, editId, onSubmit }) {
             <option value="student">Student (registered via form)</option>
           )}
           <option value="instructor">Instructor</option>
+          <option value="manager">Manager</option>
           <option value="marketing">Marketing Staff</option>
           <option value="frontoffice">Front Office</option>
           <option value="officeboy">Office Boy</option>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import { collection, query, where, doc, updateDoc, onSnapshot } from "firebase/firestore";
+import SelfClockInOut from "./SelfClockInOut";
 
 export default function OfficeBoyDashboard() {
   const [tasks, setTasks] = useState([]);
@@ -71,10 +72,8 @@ export default function OfficeBoyDashboard() {
       )}
 
       <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 mt-6">
-        <p className="text-[10px] font-bold text-blue-700 uppercase mb-1 text-center">Important</p>
-        <p className="text-[11px] text-blue-600 text-center leading-relaxed">
-          Remember to use the Kiosk at the front desk when you arrive and leave to record your shift!
-        </p>
+        <p className="text-[10px] font-bold text-blue-700 uppercase mb-3 text-center">Office Boy Attendance</p>
+        <SelfClockInOut />
       </div>
     </div>
   );
