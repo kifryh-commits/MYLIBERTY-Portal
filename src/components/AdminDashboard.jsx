@@ -3,13 +3,16 @@ import { db, firebaseConfig } from "../firebase";
 import { collection, doc, setDoc, addDoc, getDocs, deleteDoc, query, where } from "firebase/firestore";
 import { getApps, initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import QRCode from "qrcode";
 import ReportsDashboard from "./ReportsDashboard";
 import AIAssistant from "./AIAssistant";
 import StudentApplications from "./StudentApplications";
 import Kiosk from "./Kiosk";
-import StudentRoster from "./StudentRoster"; 
-import ClassManager from "./ClassManager"; // 👈 Imported your new ClassManager component!
+import StudentRoster from "./StudentRoster";
+import ClassManager from "./ClassManager";
+import UserForm from "./UserForm";
+import InvitesPanel from "./InvitesPanel";
+import TasksPanel from "./TasksPanel";
+import BadgeModal from "./BadgeModal";
 
 function getSecondaryAuth() {
   const secondaryApp = getApps().find(app => app.name === "Secondary")
@@ -24,10 +27,9 @@ export default function AdminDashboard({ isFrontOffice = false }) {
   const [users, setUsers] = useState([]);
   const [classes, setClasses] = useState([]);
   const [applications, setApplications] = useState([]);
-  const [invites, setInvites] = useState([]); // 👈 Added state for invitations
+  const [invites, setInvites] = useState([]);
   const [editId, setEditId] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [badgeQr, setBadgeQr] = useState({ id: null, url: "" });
 
   // Form State for adding/editing users
   const [formData, setFormData] = useState({
@@ -37,16 +39,8 @@ export default function AdminDashboard({ isFrontOffice = false }) {
     rating: "1", notes: ""
   });
 
-  // Misc & Tasks States
+  // Misc & Tasks
   const [todos, setTodos] = useState([]);
-  const [newTodo, setNewTodo] = useState("");
-  const [todoType, setTodoType] = useState("task");
-  const [todoPinned, setTodoPinned] = useState(false);
-  const [todoAssignee, setTodoAssignee] = useState("all"); // 👈 Added assignee state
-
-  // Invitation Form State
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("instructor");
 
   const fetchData = useCallback(async () => {
     try {
@@ -68,21 +62,16 @@ export default function AdminDashboard({ isFrontOffice = false }) {
     } catch (err) { console.error(err); }
   }, [isFrontOffice]);
 
-  const handleCreateInvite = async (e) => {
-    e.preventDefault();
+  const handleCreateInvite = async (email, role) => {
     try {
       const token = crypto.randomUUID();
-      const inviteData = {
-        email: inviteEmail.toLowerCase(),
-        role: inviteRole,
-        createdAt: new Date().toISOString(),
-        used: false,
-        token
-      };
       // Doc ID == token, so the public /join/ page can look an invite up
       // by exact ID without needing permission to list the whole collection.
-      await setDoc(doc(db, "invites", token), inviteData);
-      setInviteEmail("");
+      await setDoc(doc(db, "invites", token), {
+        email: email.toLowerCase(), role,
+        createdAt: new Date().toISOString(),
+        used: false, token
+      });
       fetchData();
       alert("Invitation generated!");
     } catch (err) { alert(err.message); }
@@ -98,16 +87,7 @@ export default function AdminDashboard({ isFrontOffice = false }) {
 
   useEffect(() => { (async () => { await fetchData(); })(); }, [fetchData]);
 
-  // Generate the ID badge QR code locally instead of sending the person's
-  // Firestore/Auth ID to a third-party image service (api.qrserver.com).
-  useEffect(() => {
-    if (!selectedStudent) return;
-    let cancelled = false;
-    QRCode.toDataURL(selectedStudent.id, { width: 240, margin: 1 })
-      .then(url => { if (!cancelled) setBadgeQr({ id: selectedStudent.id, url }); })
-      .catch(err => console.error("QR generation failed:", err));
-    return () => { cancelled = true; };
-  }, [selectedStudent]);
+  // QR code generation is now handled inside BadgeModal
 
   // Handle cross-component payment toggles
   const togglePaymentStatus = useCallback(async (uid, currentStatus) => {
@@ -163,18 +143,13 @@ export default function AdminDashboard({ isFrontOffice = false }) {
     } catch (err) { alert(err.message); }
   };
 
-  const handleAddTodo = async (e) => {
-    e.preventDefault();
+  const handleAddTodo = async ({ text, type, isPinned, assignee }) => {
     try {
-      await addDoc(collection(db, "todos"), { 
-        text: newTodo, 
-        type: todoType, 
-        isPinned: todoPinned,
-        assignee: todoAssignee, // 👈 Saved assignee
+      await addDoc(collection(db, "todos"), {
+        text, type, isPinned, assignee,
         completed: false,
         createdAt: new Date().toISOString()
       });
-      setNewTodo(""); setTodoType("task"); setTodoPinned(false); setTodoAssignee("all");
       fetchData();
     } catch (err) { alert(err.message); }
   };
@@ -183,7 +158,7 @@ export default function AdminDashboard({ isFrontOffice = false }) {
     if (!confirm("Delete this task or reminder?")) return;
     try {
       await deleteDoc(doc(db, "todos", todoId));
-      setTodos(currentTodos => currentTodos.filter(todo => todo.id !== todoId));
+      setTodos(current => current.filter(t => t.id !== todoId));
     } catch (err) { alert("Error deleting task: " + err.message); }
   };
 
@@ -364,74 +339,12 @@ export default function AdminDashboard({ isFrontOffice = false }) {
           </div>
         )}
         {!isFrontOffice && activeTab === "addUser" && (
-          <form onSubmit={handleSave} className="bg-white p-6 rounded-2xl shadow-sm text-sm border border-slate-150 max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-3">
-            <h3 className="font-bold text-slate-800 text-base md:col-span-2">{editId ? "Update Profile" : (formData.role === "student" ? "Add Student to Roster" : "Automated Account Creation")}</h3>
-            
-            <div className="md:col-span-2">
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Role</label>
-              <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full p-2.5 border rounded-lg bg-white font-bold" disabled={!!editId}>
-                {editId && formData.role === "student" && <option value="student">Student (registered via form)</option>}
-                <option value="instructor">Instructor</option>
-                <option value="marketing">Marketing Staff</option>
-                <option value="frontoffice">Front Office</option>
-                <option value="officeboy">Office Boy</option>
-              </select>
-              {!editId && (
-                <p className="text-[9px] text-gray-400 mt-1">Students now register via the Google Form — see the Student Applications tab.</p>
-              )}
-            </div>
-
-            {/* 👈 Split Name input boxes */}
-            <input type="text" placeholder="First Name" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} className="w-full p-2.5 border rounded-lg" required />
-            <input type="text" placeholder="Last Name" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} className="w-full p-2.5 border rounded-lg" required />
-            <input type="text" placeholder="Nickname" value={formData.nickname} onChange={e => setFormData({...formData, nickname: e.target.value})} className="w-full p-2.5 border rounded-lg" required />
-
-            {/* 👈 Gender selection dropdown */}
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Gender</label>
-              <select value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value})} className="w-full p-2.5 border rounded-lg bg-white font-bold">
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
-            </div>
-
-            <input type="tel" placeholder="Phone Number" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full p-2.5 border rounded-lg" />
-            {formData.role !== "student" && (
-              <>
-                <input type="email" placeholder="Email" autoComplete="off" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full p-2.5 border rounded-lg" required disabled={!!editId} />
-                {!editId && <input type="password" placeholder="Password" autoComplete="new-password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full p-2.5 border rounded-lg" required />}
-              </>
-            )}
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Date of Birth</label>
-              <input type="date" value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} className="w-full p-2.5 border rounded-lg bg-white" required />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Joined Date</label>
-              <input type="date" value={formData.joinedDate} onChange={e => setFormData({...formData, joinedDate: e.target.value})} disabled={formData.role !== "student"} className={`w-full p-2.5 border rounded-lg transition ${formData.role !== "student" ? "bg-slate-50 cursor-not-allowed opacity-50" : "bg-white"}`} />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Education Level</label>
-              <select value={formData.educationLevel} onChange={e => setFormData({...formData, educationLevel: e.target.value})} className="w-full p-2.5 border rounded-lg bg-white font-bold">
-                <option value="SD">SD (Sekolah Dasar)</option>
-                <option value="SMP">SMP (Sekolah Menengah Pertama)</option>
-                <option value="SMA_SMK">SMA/SMK (Sekolah Menengah Atas/Kejuruan)</option>
-                <option value="Universitas">Universitas / Perguruan Tinggi</option>
-                <option value="Umum">Umum / Pekerja (Adult)</option>
-              </select>
-            </div>
-            <hr className="border-slate-100 my-1 md:col-span-2" />
-            <label className="block text-[10px] font-bold text-slate-400 uppercase md:col-span-2">Student Profile Fields</label>
-            <input type="text" placeholder="Parent's Name" value={formData.parentName} onChange={e => setFormData({...formData, parentName: e.target.value})} disabled={formData.role !== "student"} className={`w-full p-2.5 border rounded-lg transition ${formData.role !== "student" ? "bg-slate-50 cursor-not-allowed opacity-50" : "bg-white"}`} />
-            <input type="tel" placeholder="Parent's Phone" value={formData.parentPhone} onChange={e => setFormData({...formData, parentPhone: e.target.value})} disabled={formData.role !== "student"} className={`w-full p-2.5 border rounded-lg transition ${formData.role !== "student" ? "bg-slate-50 cursor-not-allowed opacity-50" : "bg-white"}`} />
-            <select value={formData.rating} onChange={e => setFormData({...formData, rating: e.target.value})} disabled={formData.role !== "student"} className={`w-full p-2.5 border rounded-lg transition bg-white ${formData.role !== "student" ? "bg-slate-50 cursor-not-allowed opacity-50 text-slate-400" : "bg-white font-bold"}`}>
-              <option value="1">1 Star (Beginner)</option>
-              <option value="3">3 Star (Intermediate)</option>
-              <option value="5">5 Star (Fluent)</option>
-            </select>
-            <textarea placeholder="Notes / Evaluation" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} disabled={formData.role !== "student"} className={`w-full p-2.5 border rounded-lg transition ${formData.role !== "student" ? "bg-slate-50 cursor-not-allowed opacity-50" : "bg-white"}`} />
-            <button type="submit" className="w-full bg-[#1a3a8f] text-white p-3 rounded-xl font-bold hover:bg-[#122b6e] transition md:col-span-2">{editId ? "Update Profile" : "Create & Save Profile"}</button>
-          </form>
+          <UserForm
+            formData={formData}
+            setFormData={setFormData}
+            editId={editId}
+            onSubmit={handleSave}
+          />
         )}
 
         {!isFrontOffice && activeTab === "directory" && (
@@ -496,152 +409,33 @@ export default function AdminDashboard({ isFrontOffice = false }) {
           />
         )}
 
-        {/* 👈 Staff Invitation System workspace */}
+        {/* Staff Invitation System */}
         {!isFrontOffice && activeTab === "invites" && (
-          <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-150 max-w-6xl mx-auto space-y-6">
-            <div>
-              <h3 className="font-bold text-slate-800 text-base">Invite Staff</h3>
-              <p className="text-xs text-slate-500">Generate a unique link for new staff to set up their own accounts.</p>
-            </div>
-
-            <form onSubmit={handleCreateInvite} className="flex flex-col md:flex-row gap-3">
-              <input 
-                type="email" 
-                placeholder="Staff Email" 
-                value={inviteEmail} 
-                onChange={e => setInviteEmail(e.target.value)} 
-                className="flex-1 p-2.5 border rounded-lg text-sm" 
-                required 
-              />
-              <select 
-                value={inviteRole} 
-                onChange={e => setInviteRole(e.target.value)} 
-                className="p-2.5 border rounded-lg bg-white font-bold text-sm"
-              >
-                <option value="instructor">Instructor</option>
-                <option value="marketing">Marketing Staff</option>
-                <option value="frontoffice">Front Office</option>
-                <option value="officeboy">Office Boy</option>
-              </select>
-              <button type="submit" className="bg-[#1a3a8f] text-white px-6 py-2.5 rounded-lg font-bold hover:bg-[#122b6e] transition text-sm">Generate Link</button>
-            </form>
-
-            <div className="space-y-2 border-t pt-4">
-              <h4 className="font-bold text-slate-700 text-xs uppercase tracking-wider">Pending Invitations</h4>
-              {invites.filter(inv => !inv.used).length === 0 ? (
-                <p className="text-xs text-slate-400 italic">No pending invitations.</p>
-              ) : (
-                <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                  {invites.filter(inv => !inv.used).map(inv => (
-                    <div key={inv.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-3 bg-slate-50 rounded-xl border border-slate-150 gap-2">
-                      <div className="text-xs">
-                        <p className="font-bold text-slate-800">{inv.email}</p>
-                        <p className="text-slate-500 uppercase font-bold text-[9px]">{inv.role} · Created {new Date(inv.createdAt).toLocaleDateString()}</p>
-                      </div>
-                      <div className="flex gap-2 w-full md:w-auto">
-                        <button 
-                          onClick={() => {
-                            const link = `${window.location.origin}/join/${inv.token}`;
-                            navigator.clipboard.writeText(link);
-                            alert("Copied to clipboard: " + link);
-                          }}
-                          className="flex-1 md:flex-none bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-emerald-700 transition text-[10px]"
-                        >
-                          📋 Copy Link
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteInvite(inv.id)}
-                          className="flex-1 md:flex-none bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-red-600 transition text-[10px]"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+          <InvitesPanel
+            invites={invites}
+            onCreateInvite={handleCreateInvite}
+            onDeleteInvite={handleDeleteInvite}
+          />
         )}
 
-        {/* Dynamic Reports and Misc workspaces */}
+        {/* Reports, Tasks, AI, Applications */}
         {activeTab === "reports" && <ReportsDashboard isAdminView={!isFrontOffice} isFrontOffice={isFrontOffice} />}
         {activeTab === "misc" && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto text-sm">
-            {/* Column 1: Pinned Reminders & Deadlines (Corkboard) */}
-            <div className="space-y-4">
-              <h3 className="font-bold text-slate-800 text-base">📌 Corkboard (Pinned Reminders)</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {todos.filter(t => t.isPinned || t.type === "deadline").map(t => (
-                  <div key={t.id} className="p-4 bg-yellow-150 border-yellow-300 border rounded-xl shadow-md transform rotate-1 space-y-1 relative bg-[#fef9c3]">
-                    <span className="absolute top-2 right-2 text-[9px] font-bold uppercase text-red-600">{t.type}</span>
-                    <p className="font-bold text-slate-800 pt-2">{t.text}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Column 2: Create & View Task List */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-150 space-y-3">
-              <h3 className="font-bold text-slate-700 text-sm border-b pb-2">Office Task Manager</h3>
-              <form onSubmit={handleAddTodo} className="space-y-2">
-                <input type="text" placeholder="Add task / appointment / deadline..." value={newTodo} onChange={e => setNewTodo(e.target.value)} className="w-full p-2.5 border rounded-lg" required />
-              <div className="flex gap-2">
-                  <select value={todoType} onChange={e => setTodoType(e.target.value)} className="flex-1 p-2.5 border rounded-lg bg-white font-bold">
-                    <option value="task">Task</option>
-                    <option value="appointment">Appointment</option>
-                    <option value="deadline">Deadline</option>
-                  </select>
-                  <select value={todoAssignee} onChange={e => setTodoAssignee(e.target.value)} className="flex-1 p-2.5 border rounded-lg bg-white font-bold">
-                    <option value="all">Everyone</option>
-                    <option value="officeboy">Office Boy</option>
-                  </select>
-                  <label className="flex items-center gap-1.5 font-bold text-xs text-slate-600">
-                    <input type="checkbox" checked={todoPinned} onChange={e => setTodoPinned(e.target.checked)} /> Pin
-                  </label>
-                </div>
-                <button type="submit" className="w-full bg-[#1a3a8f] text-white p-3 rounded-xl font-bold hover:bg-[#122b6e] transition">Add Item</button>
-              </form>
-              <div className="space-y-1 max-h-48 overflow-y-auto">
-                {todos.map(t => (
-                  <div key={t.id} className="p-2.5 bg-slate-50 border border-slate-150 rounded-lg flex justify-between items-center text-xs gap-2">
-                    <span><span className="font-bold uppercase text-[9px] mr-2 bg-slate-200 px-1.5 py-0.5 rounded text-slate-600">{t.type}</span>{t.text}</span>
-                    <button onClick={() => handleDeleteTodo(t.id)} className="text-red-600 hover:text-red-800 font-bold text-[10px] shrink-0" title="Delete task">Delete</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <TasksPanel
+            todos={todos}
+            onAddTodo={handleAddTodo}
+            onDeleteTodo={handleDeleteTodo}
+          />
         )}
         {activeTab === "aiAssistant" && <AIAssistant />}
         {activeTab === "applications" && <StudentApplications />}
       </div>
 
-      {/* Option A Modal: Student ID Card Printable Layout */}
-      {selectedStudent && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white p-6 rounded-2xl shadow-xl max-w-xs w-full text-center border relative">
-            <div className="border-2 border-indigo-600 p-4 rounded-xl bg-gradient-to-br from-indigo-50 to-white text-xs space-y-3">
-              <h4 className="font-black text-indigo-900 text-sm tracking-wider uppercase">{selectedStudent.role === "student" ? "Student ID Badge" : "Staff ID Badge"}</h4>
-              <div className="flex justify-center bg-white p-1.5 rounded-lg inline-block mx-auto border shadow-sm">
-                {badgeQr.id === selectedStudent.id && <img src={badgeQr.url} alt="Student QR Code" className="w-24 h-24" />}
-              </div>
-              <div>
-                <p className="font-extrabold text-slate-800 text-sm uppercase">{selectedStudent.displayName}</p>
-                <p className="text-slate-500 font-semibold">{selectedStudent.email}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-1 text-[10px] text-slate-600 pt-2 border-t border-indigo-100">
-                <p className="text-left font-bold">DOB: <span className="font-normal">{selectedStudent.dob || "N/A"}</span></p>
-                <p className="text-right font-bold">Edu: <span className="font-normal">{selectedStudent.educationLevel || "N/A"}</span></p>
-              </div>
-            </div>
-            <div className="flex gap-2 mt-4 text-sm">
-              <button onClick={() => window.print()} className="flex-1 bg-indigo-600 text-white p-2.5 rounded-xl font-bold hover:bg-indigo-700">🖨️ Print</button>
-              <button onClick={() => setSelectedStudent(null)} className="flex-1 bg-slate-200 text-slate-700 p-2.5 rounded-xl font-bold hover:bg-slate-300">Close</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ID Badge Modal */}
+      <BadgeModal
+        person={selectedStudent}
+        onClose={() => setSelectedStudent(null)}
+      />
     </div>
   );
 }

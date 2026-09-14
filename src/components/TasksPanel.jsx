@@ -1,0 +1,117 @@
+/**
+ * TasksPanel.jsx
+ * Office corkboard & task manager — extracted from AdminDashboard for maintainability.
+ * Displays pinned reminders and lets admins create/delete tasks.
+ */
+
+import { useState } from "react";
+
+export default function TasksPanel({ todos, onAddTodo, onDeleteTodo }) {
+  const [newTodo, setNewTodo]       = useState("");
+  const [todoType, setTodoType]     = useState("task");
+  const [todoPinned, setTodoPinned] = useState(false);
+  const [todoAssignee, setTodoAssignee] = useState("all");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await onAddTodo({ text: newTodo, type: todoType, isPinned: todoPinned, assignee: todoAssignee });
+    setNewTodo("");
+    setTodoType("task");
+    setTodoPinned(false);
+    setTodoAssignee("all");
+  };
+
+  const pinned = todos.filter(t => t.isPinned || t.type === "deadline");
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto text-sm">
+
+      {/* Column 1: Corkboard */}
+      <div className="space-y-4">
+        <h3 className="font-bold text-slate-800 text-base">📌 Corkboard (Pinned Reminders)</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {pinned.map(t => (
+            <div
+              key={t.id}
+              className="p-4 border-yellow-300 border rounded-xl shadow-md transform rotate-1 space-y-1 relative bg-[#fef9c3]"
+            >
+              <span className="absolute top-2 right-2 text-[9px] font-bold uppercase text-red-600">{t.type}</span>
+              <p className="font-bold text-slate-800 pt-2">{t.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Column 2: Task Manager */}
+      <div className="bg-white p-5 rounded-2xl border border-slate-150 space-y-3">
+        <h3 className="font-bold text-slate-700 text-sm border-b pb-2">Office Task Manager</h3>
+
+        <form onSubmit={handleSubmit} className="space-y-2">
+          <input
+            type="text"
+            placeholder="Add task / appointment / deadline..."
+            value={newTodo}
+            onChange={e => setNewTodo(e.target.value)}
+            className="w-full p-2.5 border rounded-lg"
+            required
+          />
+          <div className="flex gap-2">
+            <select
+              value={todoType}
+              onChange={e => setTodoType(e.target.value)}
+              className="flex-1 p-2.5 border rounded-lg bg-white font-bold"
+            >
+              <option value="task">Task</option>
+              <option value="appointment">Appointment</option>
+              <option value="deadline">Deadline</option>
+            </select>
+            <select
+              value={todoAssignee}
+              onChange={e => setTodoAssignee(e.target.value)}
+              className="flex-1 p-2.5 border rounded-lg bg-white font-bold"
+            >
+              <option value="all">Everyone</option>
+              <option value="officeboy">Office Boy</option>
+            </select>
+            <label className="flex items-center gap-1.5 font-bold text-xs text-slate-600">
+              <input
+                type="checkbox"
+                checked={todoPinned}
+                onChange={e => setTodoPinned(e.target.checked)}
+              /> Pin
+            </label>
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-[#1a3a8f] text-white p-3 rounded-xl font-bold hover:bg-[#122b6e] transition"
+          >
+            Add Item
+          </button>
+        </form>
+
+        <div className="space-y-1 max-h-48 overflow-y-auto">
+          {todos.map(t => (
+            <div
+              key={t.id}
+              className="p-2.5 bg-slate-50 border border-slate-150 rounded-lg flex justify-between items-center text-xs gap-2"
+            >
+              <span>
+                <span className="font-bold uppercase text-[9px] mr-2 bg-slate-200 px-1.5 py-0.5 rounded text-slate-600">
+                  {t.type}
+                </span>
+                {t.text}
+              </span>
+              <button
+                onClick={() => onDeleteTodo(t.id)}
+                className="text-red-600 hover:text-red-800 font-bold text-[10px] shrink-0"
+                title="Delete task"
+              >
+                Delete
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
