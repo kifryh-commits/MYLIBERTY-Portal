@@ -28,3 +28,4 @@ mylibertyies-f2f38-*.json
 *.njsproj
 *.sln
 *.sw?
+.firebase/

@@ -27,7 +27,7 @@ export default function AdminDashboard({ isFrontOffice = false }) {
   const [invites, setInvites] = useState([]); // 👈 Added state for invitations
   const [editId, setEditId] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [badgeQrDataUrl, setBadgeQrDataUrl] = useState("");
+  const [badgeQr, setBadgeQr] = useState({ id: null, url: "" });
 
   // Form State for adding/editing users
   const [formData, setFormData] = useState({
@@ -101,21 +101,21 @@ export default function AdminDashboard({ isFrontOffice = false }) {
   // Generate the ID badge QR code locally instead of sending the person's
   // Firestore/Auth ID to a third-party image service (api.qrserver.com).
   useEffect(() => {
-    if (!selectedStudent) { setBadgeQrDataUrl(""); return; }
+    if (!selectedStudent) return;
     let cancelled = false;
     QRCode.toDataURL(selectedStudent.id, { width: 240, margin: 1 })
-      .then(url => { if (!cancelled) setBadgeQrDataUrl(url); })
+      .then(url => { if (!cancelled) setBadgeQr({ id: selectedStudent.id, url }); })
       .catch(err => console.error("QR generation failed:", err));
     return () => { cancelled = true; };
   }, [selectedStudent]);
 
   // Handle cross-component payment toggles
-    const togglePaymentStatus = async (uid, currentStatus) => {
+  const togglePaymentStatus = useCallback(async (uid, currentStatus) => {
     try {
       await setDoc(doc(db, "users", uid), { paymentStatus: currentStatus === "paid" ? "pending" : "paid" }, { merge: true });
       fetchData();
     } catch (err) { alert(err.message); }
-  };
+  }, [fetchData]);
 
   useEffect(() => {
     const handleToggle = (e) => togglePaymentStatus(e.detail.id, e.detail.status);
@@ -624,7 +624,7 @@ export default function AdminDashboard({ isFrontOffice = false }) {
             <div className="border-2 border-indigo-600 p-4 rounded-xl bg-gradient-to-br from-indigo-50 to-white text-xs space-y-3">
               <h4 className="font-black text-indigo-900 text-sm tracking-wider uppercase">{selectedStudent.role === "student" ? "Student ID Badge" : "Staff ID Badge"}</h4>
               <div className="flex justify-center bg-white p-1.5 rounded-lg inline-block mx-auto border shadow-sm">
-                {badgeQrDataUrl && <img src={badgeQrDataUrl} alt="Student QR Code" className="w-24 h-24" />}
+                {badgeQr.id === selectedStudent.id && <img src={badgeQr.url} alt="Student QR Code" className="w-24 h-24" />}
               </div>
               <div>
                 <p className="font-extrabold text-slate-800 text-sm uppercase">{selectedStudent.displayName}</p>

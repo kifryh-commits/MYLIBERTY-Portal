@@ -19,6 +19,10 @@ function getInitials(name) {
   return name.trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase()).join("");
 }
 
+// ── IDLE TIMEOUT CONFIG ──
+const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+const WARNING_TIME = 30 * 1000;      // 30 seconds
+
 function App() {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState("");
@@ -29,10 +33,6 @@ function App() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [idleWarning, setIdleWarning] = useState(false); // 👈 Added state for idle warning
-
-  // ── IDLE TIMEOUT CONFIG ──
-  const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-  const WARNING_TIME = 30 * 1000;      // 30 seconds
 
   useEffect(() => {
     if (!user) return;
