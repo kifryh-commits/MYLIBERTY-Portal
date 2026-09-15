@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { auth, db } from "../firebase";
 import { collection, query, where, getDocs, addDoc, updateDoc, doc } from "firebase/firestore";
+import { useToast } from "./ui/useToast";
 
 const CLASS_DAY_MAP = {
   "Mon/Wed": [1, 3],
@@ -9,6 +10,7 @@ const CLASS_DAY_MAP = {
 };
 
 export default function SelfClockInOut() {
+  const toast = useToast();
   const [activeShift, setActiveShift] = useState(null);
   const [classes, setClasses] = useState([]);
   const [selectedClassId, setSelectedClassId] = useState("");
@@ -80,7 +82,7 @@ export default function SelfClockInOut() {
       }
       fetchStatus();
     } catch (err) {
-      alert("Error: " + err.message);
+      toast("Error: " + err.message, "error");
     }
   };
 

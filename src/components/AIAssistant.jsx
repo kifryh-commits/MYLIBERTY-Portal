@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useToast } from "./ui/useToast";
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
 const GEMINI_MODEL = "gemini-flash-latest";
@@ -17,6 +18,7 @@ const MODES = {
 };
 
 export default function AIAssistant() {
+  const toast = useToast();
   const [mode, setMode] = useState("draft");
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
@@ -66,7 +68,7 @@ export default function AIAssistant() {
 
   const handleCopy = () => {
     navigator.clipboard.writeText(output);
-    alert("Copied to clipboard!");
+    toast("Copied to clipboard!");
   };
 
   return (

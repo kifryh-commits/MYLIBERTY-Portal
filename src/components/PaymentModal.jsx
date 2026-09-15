@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { auth, db } from "../firebase";
 import { collection, addDoc, getDocs, query, where, doc, setDoc } from "firebase/firestore";
 import schoolLogo from "../assets/school-logo.webp";
+import { useToast } from "./ui/useToast";
+import { useConfirm } from "./ui/useConfirm";
 
 function formatIDR(value) {
   const num = Number(value) || 0;
@@ -30,6 +32,8 @@ function getDefaultPeriod() {
 }
 
 export default function PaymentModal({ student, onClose, onPaymentUpdated }) {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [activeTab, setActiveTab] = useState("record"); // "record" | "history" | "receipt"
   const [amount, setAmount] = useState(350000);
   const [period, setPeriod] = useState(getDefaultPeriod());
@@ -90,11 +94,11 @@ export default function PaymentModal({ student, onClose, onPaymentUpdated }) {
   const handleRecordPayment = async (e) => {
     e.preventDefault();
     if (!amount || amount <= 0) {
-      alert("Please enter a valid payment amount.");
+      toast("Please enter a valid payment amount.", "error");
       return;
     }
     if (!period.trim()) {
-      alert("Please enter a billing period (e.g. September 2026).");
+      toast("Please enter a billing period (e.g. September 2026).", "error");
       return;
     }
 
@@ -135,21 +139,21 @@ export default function PaymentModal({ student, onClose, onPaymentUpdated }) {
       setActiveReceipt(savedPayment);
       setActiveTab("receipt");
     } catch (err) {
-      alert("Error saving payment: " + err.message);
+      toast("Error saving payment: " + err.message, "error");
     } finally {
       setSaving(false);
     }
   };
 
   const handleMarkPending = async () => {
-    if (!confirm(`Mark ${student.displayName}'s payment status as Pending for the next period?`)) return;
+    if (!(await confirm(`Mark ${student.displayName}'s payment status as Pending for the next period?`))) return;
     try {
       await setDoc(doc(db, "users", student.id), { paymentStatus: "pending" }, { merge: true });
       if (onPaymentUpdated) onPaymentUpdated();
-      alert("Status updated to Pending.");
+      toast("Status updated to Pending.");
       onClose();
     } catch (err) {
-      alert("Error updating status: " + err.message);
+      toast("Error updating status: " + err.message, "error");
     }
   };
 
@@ -178,7 +182,7 @@ export default function PaymentModal({ student, onClose, onPaymentUpdated }) {
     const message = generateWhatsAppMessage(rcp);
 
     if (!formatted) {
-      alert("No valid phone number found for parent or student. Please update contact information first.");
+      toast("No valid phone number found for parent or student. Please update contact information first.", "error");
       return;
     }
 

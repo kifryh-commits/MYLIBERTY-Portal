@@ -5,8 +5,10 @@
  */
 
 import { useState } from "react";
+import { useToast } from "./ui/useToast";
 
 export default function InvitesPanel({ invites, onCreateInvite, onDeleteInvite }) {
+  const toast = useToast();
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("instructor");
 
@@ -75,7 +77,7 @@ export default function InvitesPanel({ invites, onCreateInvite, onDeleteInvite }
                     onClick={() => {
                       const link = `${window.location.origin}/join/${inv.token}`;
                       navigator.clipboard.writeText(link);
-                      alert("Copied to clipboard: " + link);
+                      toast("Copied to clipboard: " + link);
                     }}
                     className="flex-1 md:flex-none bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-emerald-700 transition text-[10px]"
                   >

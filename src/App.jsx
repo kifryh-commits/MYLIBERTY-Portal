@@ -5,6 +5,7 @@ import { doc, getDoc } from "firebase/firestore";
 import ProfilePanel from "./components/ProfilePanel";
 import LoginPage from "./components/LoginPage";
 import RegistrationPage from "./components/RegistrationPage";
+import { useToast } from "./components/ui/useToast";
 
 // Import your role dashboard files!
 import AdminDashboard from "./components/AdminDashboard";
@@ -25,6 +26,7 @@ const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const WARNING_TIME = 30 * 1000;      // 30 seconds
 
 function App() {
+  const toast = useToast();
   const [user, setUser] = useState(null);
   const [role, setRole] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -114,7 +116,7 @@ function App() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err) { 
-      alert("Login Error: " + err.message); 
+      toast("Login Error: " + err.message, "error"); 
     } finally {
       setLoading(false);
     }

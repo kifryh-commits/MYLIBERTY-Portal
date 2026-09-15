@@ -5,6 +5,7 @@ import LevelBadge from "./ui/LevelBadge";
 import { LEVELS } from "./ui/levels";
 import { useToast } from "./ui/useToast";
 import { useConfirm } from "./ui/useConfirm";
+import { printHtmlTable } from "../utils/printTable";
 
 export default function ClassManager({ classes, users, instructors, unenrolledStudents, fetchData }) {
   const toast = useToast();
@@ -418,7 +419,29 @@ export default function ClassManager({ classes, users, instructors, unenrolledSt
 
       {classSubTab === "list" && (
         <div className="overflow-x-auto">
-          <h3 className="font-bold text-slate-800 text-base mb-1">Active Classes</h3>
+          <div className="flex justify-between items-start gap-2 mb-1">
+            <h3 className="font-bold text-slate-800 text-base">Active Classes</h3>
+            <button
+              onClick={() => {
+                const headers = ["Class Name", "Level", "Instructor", "Schedule", "Students"];
+                const rows = classGroups.map(group => {
+                  const teacher = users.find(u => u.id === group.instructorId);
+                  const totalStudents = group.items.reduce((sum, cls) => sum + (cls.studentIds || []).length, 0);
+                  return [
+                    group.className + (group.items.length > 1 ? ` (${group.items.length} batches)` : ""),
+                    group.classLevel || "Unset",
+                    teacher ? teacher.displayName : "Unassigned",
+                    group.schedule,
+                    `${totalStudents} enrolled`,
+                  ];
+                });
+                printHtmlTable("Active Classes", headers, rows, toast);
+              }}
+              className="bg-slate-100 text-slate-600 border px-3 py-1 rounded-full font-bold text-xs hover:bg-slate-200 transition shrink-0"
+            >
+              🖨️ Print
+            </button>
+          </div>
           <p className="text-[11px] text-slate-400 mb-3">Classes with the same name, schedule, instructor and level are grouped into one row — click a row to expand and manage individual batches.</p>
           <table className="w-full text-left border-collapse text-sm">
             <thead>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useDashboardData } from "../hooks/useDashboardData";
 import DashboardShell from "./DashboardShell";
 import StatCard from "./ui/StatCard";
@@ -18,6 +18,16 @@ export default function AdminDashboard() {
   const [filterRole, setFilterRole] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // 👈 The old sidebar button reset filterRole to "all" inline on click.
+  // DashboardShell's buttons don't carry per-tab side effects, so this
+  // replicates the same behavior: reset whenever Staff Directory becomes active.
+  // Done directly in the tab-change handler (not a useEffect) so the two
+  // state updates land in the same render instead of cascading.
+  const handleTabChange = (tab) => {
+    if (tab === "directory") setFilterRole("all");
+    setActiveTab(tab);
+  };
+
   const {
     users, classes, invites, todos, fetchData,
     editId, selectedStudent, setSelectedStudent,
@@ -26,14 +36,7 @@ export default function AdminDashboard() {
     handleAddTodo, handleDeleteTodo,
     handleCreateInvite, handleDeleteInvite,
     getStudentClasses, instructors, students, unenrolledStudents, pendingApplications,
-  } = useDashboardData({ setActiveTab });
-
-  // 👈 The old sidebar button reset filterRole to "all" inline on click.
-  // DashboardShell's buttons don't carry per-tab side effects, so this
-  // replicates the same behavior: reset whenever Staff Directory becomes active.
-  useEffect(() => {
-    if (activeTab === "directory") setFilterRole("all");
-  }, [activeTab]);
+  } = useDashboardData({ setActiveTab: handleTabChange });
 
   const filteredUsers = users
     .filter(u => u.role !== "student" && u.role !== "admin") // Staff Directory is for regular staff only — admin access is granted manually via Firebase Console, never shown or managed here
@@ -57,17 +60,17 @@ export default function AdminDashboard() {
           { label: "Active classes", value: classes.length, tab: "classes", color: "text-emerald-700 bg-emerald-50" },
           { label: "Unassigned students", value: unenrolledStudents.length, tab: "students", color: "text-rose-700 bg-rose-50" },
         ].map(card => (
-          <StatCard key={card.label} size="sm" label={card.label} value={card.value} color={card.color} onClick={() => setActiveTab(card.tab)} />
+          <StatCard key={card.label} size="sm" label={card.label} value={card.value} color={card.color} onClick={() => handleTabChange(card.tab)} />
         ))}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-200">
           <h4 className="font-bold text-slate-800">Quick actions</h4>
           <div className="grid grid-cols-2 gap-2 mt-3">
-            <button onClick={() => setActiveTab("applications")} className="p-3 rounded-lg bg-slate-50 border text-sm font-bold text-slate-700 hover:bg-slate-100">Review applications</button>
-            <button onClick={() => setActiveTab("addUser")} className="p-3 rounded-lg bg-slate-50 border text-sm font-bold text-slate-700 hover:bg-slate-100">Add staff</button>
-            <button onClick={() => setActiveTab("classes")} className="p-3 rounded-lg bg-slate-50 border text-sm font-bold text-slate-700 hover:bg-slate-100">Manage classes</button>
-            <button onClick={() => setActiveTab("reports")} className="p-3 rounded-lg bg-slate-50 border text-sm font-bold text-slate-700 hover:bg-slate-100">Open reports</button>
+            <button onClick={() => handleTabChange("applications")} className="p-3 rounded-lg bg-slate-50 border text-sm font-bold text-slate-700 hover:bg-slate-100">Review applications</button>
+            <button onClick={() => handleTabChange("addUser")} className="p-3 rounded-lg bg-slate-50 border text-sm font-bold text-slate-700 hover:bg-slate-100">Add staff</button>
+            <button onClick={() => handleTabChange("classes")} className="p-3 rounded-lg bg-slate-50 border text-sm font-bold text-slate-700 hover:bg-slate-100">Manage classes</button>
+            <button onClick={() => handleTabChange("reports")} className="p-3 rounded-lg bg-slate-50 border text-sm font-bold text-slate-700 hover:bg-slate-100">Open reports</button>
           </div>
         </div>
         <div className="bg-white p-5 rounded-2xl border border-slate-200">
@@ -167,7 +170,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-5 bg-[#f0f2f5] rounded-2xl min-h-[500px]">
-      <DashboardShell tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} title="Admin Panel" />
+      <DashboardShell tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} title="Admin Panel" />
 
       {/* ID Badge Modal */}
       <BadgeModal

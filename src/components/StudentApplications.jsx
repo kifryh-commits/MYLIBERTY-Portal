@@ -1,8 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { db } from "../firebase";
 import { collection, getDocs, addDoc, deleteDoc, doc } from "firebase/firestore";
+import { useToast } from "./ui/useToast";
+import { useConfirm } from "./ui/useConfirm";
 
 export default function StudentApplications() {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
@@ -67,20 +71,20 @@ export default function StudentApplications() {
       await deleteDoc(doc(db, "applications", app.id));
       fetchApplications();
     } catch (err) {
-      alert("Error approving: " + err.message);
+      toast("Error approving: " + err.message, "error");
     } finally {
       setProcessingId(null);
     }
   };
 
   const handleReject = async (app) => {
-    if (!confirm(`Reject ${app.displayName}'s application? This deletes it permanently — there's no record kept afterward.`)) return;
+    if (!(await confirm(`Reject ${app.displayName}'s application? This deletes it permanently — there's no record kept afterward.`))) return;
     setProcessingId(app.id);
     try {
       await deleteDoc(doc(db, "applications", app.id));
       fetchApplications();
     } catch (err) {
-      alert("Error rejecting: " + err.message);
+      toast("Error rejecting: " + err.message, "error");
     } finally {
       setProcessingId(null);
     }
@@ -88,9 +92,19 @@ export default function StudentApplications() {
 
   return (
     <div className="bg-white p-4 rounded-2xl border max-w-4xl mx-auto text-xs space-y-4">
-      <h3 className="font-bold text-slate-700 text-sm">
-        Student Applications {applications.length > 0 && `(${applications.length} pending)`}
-      </h3>
+      <div className="flex justify-between items-center gap-2">
+        <h3 className="font-bold text-slate-700 text-sm">
+          Student Applications {applications.length > 0 && `(${applications.length} pending)`}
+        </h3>
+        <a
+          href="https://docs.google.com/spreadsheets/d/12FfhjJ_gxXLhII8LYLhOyeIbwcxXLNIlvZ2RbtdVgqQ/edit?resourcekey=&gid=800855144#gid=800855144"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-[#1a3a8f] text-white px-3 py-1.5 rounded-lg font-bold text-[10px] hover:bg-[#122b6e] transition shrink-0"
+        >
+          📊 View Full Applicant History
+        </a>
+      </div>
 
       {loading ? (
         <p className="text-gray-400 text-center py-6">Loading...</p>

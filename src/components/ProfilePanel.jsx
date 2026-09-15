@@ -3,6 +3,7 @@ import { auth, db } from "../firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { uploadToCloudinary } from "../utils/cloudinaryUpload";
+import { useToast } from "./ui/useToast";
 
 function getInitials(name) {
   if (!name) return "?";
@@ -10,6 +11,7 @@ function getInitials(name) {
 }
 
 export default function ProfilePanel({ onClose, onUpdated }) {
+  const toast = useToast();
   const uid = auth.currentUser?.uid;
   const email = auth.currentUser?.email;
 
@@ -44,7 +46,7 @@ export default function ProfilePanel({ onClose, onUpdated }) {
       setProfile(p => ({ ...p, photoURL: url }));
       onUpdated?.();
     } catch (err) {
-      alert("Photo upload failed: " + err.message);
+      toast("Photo upload failed: " + err.message, "error");
     } finally {
       setUploading(false);
     }
@@ -58,7 +60,7 @@ export default function ProfilePanel({ onClose, onUpdated }) {
       onUpdated?.();
       onClose();
     } catch (err) {
-      alert("Save failed: " + err.message);
+      toast("Save failed: " + err.message, "error");
     } finally {
       setSaving(false);
     }
@@ -69,7 +71,7 @@ export default function ProfilePanel({ onClose, onUpdated }) {
       await sendPasswordResetEmail(auth, email);
       setResetSent(true);
     } catch (err) {
-      alert("Error: " + err.message);
+      toast("Error: " + err.message, "error");
     }
   };
 

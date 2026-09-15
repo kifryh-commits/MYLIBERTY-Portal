@@ -110,7 +110,7 @@ function InstructorClasses() {
                 {cls.worksheetUrl && (
                   <div className="mt-2 pt-2 border-t border-gray-200 text-[10px] text-green-700 font-bold flex items-center gap-1">
                     <span>📄</span>
-                    <a href="#" onClick={(e) => { e.preventDefault(); alert(`Opening Class Worksheet: ${cls.worksheetUrl}`); }} className="hover:underline">
+                    <a href={cls.worksheetUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
                       View Admin Worksheet
                     </a>
                   </div>

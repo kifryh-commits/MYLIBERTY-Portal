@@ -1,8 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { auth, db } from "../firebase";
 import { collection, query, where, getDocs, addDoc, deleteDoc, doc } from "firebase/firestore";
+import { useToast } from "./ui/useToast";
+import { useConfirm } from "./ui/useConfirm";
 
 export default function TeachingMaterial() {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [materials, setMaterials] = useState([]);
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
@@ -39,12 +43,12 @@ export default function TeachingMaterial() {
       setTitle(""); setUrl("");
       fetchMaterials();
     } catch (err) {
-      alert("Error: " + err.message);
+      toast("Error: " + err.message, "error");
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Remove this material?")) return;
+    if (!(await confirm("Remove this material?"))) return;
     await deleteDoc(doc(db, "materials", id));
     fetchMaterials();
   };

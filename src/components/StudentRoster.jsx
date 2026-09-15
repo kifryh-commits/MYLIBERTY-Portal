@@ -1,7 +1,10 @@
 import { useState } from "react";
 import PaymentModal from "./PaymentModal";
+import { printHtmlTable } from "../utils/printTable";
+import { useToast } from "./ui/useToast";
 
 export default function StudentRoster({ students, getStudentClasses, setSelectedStudent, handleEdit, handleDelete, fetchData }) {
+  const toast = useToast();
   const [paymentStudent, setPaymentStudent] = useState(null);
   // Sort states live cleanly inside this sub-component now!
   const [studentSortField, setStudentSortField] = useState("displayName");
@@ -41,14 +44,37 @@ export default function StudentRoster({ students, getStudentClasses, setSelected
       return 0;
     });
 
+  const handlePrint = () => {
+    const headers = ["Student Name", "Parent Contact", "Education", "DOB", "Joined", "Payment", "Class", "Instructor"];
+    const rows = sortedStudents.map(s => [
+      s.displayName || "",
+      `${s.parentName || "N/A"} (${s.parentPhone || "N/A"})`,
+      s.educationLevel || s.schoolOrJob || "N/A",
+      s.dob || "N/A",
+      s.effectiveJoinedDate || "N/A",
+      s.paymentStatus === "paid" ? "Paid" : "Pending",
+      s.studentClasses.length ? s.studentClasses.map(c => c.className).join(", ") : "Unassigned",
+      s.studentClasses.length ? s.studentClasses.map(c => c.instructorName || "Unassigned").join(", ") : "—",
+    ]);
+    printHtmlTable("Student Roster", headers, rows, toast);
+  };
+
   return (
     <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 max-w-6xl mx-auto">
       {/* Header Panel */}
       <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-150">
         <h3 className="font-bold text-slate-800 text-base">🎓 Student Roster</h3>
-        <span className="bg-[#1a3a8f]/10 text-[#1a3a8f] px-3 py-1 rounded-full font-bold text-xs uppercase">
-          {students.length} Active Students
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handlePrint}
+            className="bg-slate-100 text-slate-600 border px-3 py-1 rounded-full font-bold text-xs hover:bg-slate-200 transition"
+          >
+            🖨️ Print
+          </button>
+          <span className="bg-[#1a3a8f]/10 text-[#1a3a8f] px-3 py-1 rounded-full font-bold text-xs uppercase">
+            {students.length} Active Students
+          </span>
+        </div>
       </div>
 
       <input

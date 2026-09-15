@@ -1,6 +1,8 @@
 import { useState, useRef } from "react";
+import { useToast } from "./ui/useToast";
 
 export default function ClassPhotoShare() {
+  const toast = useToast();
   const [photo, setPhoto] = useState(null); // { file, previewUrl }
   const fileInputRef = useRef(null);
 
@@ -22,10 +24,10 @@ export default function ClassPhotoShare() {
           text: "Today's class photo 📸",
         });
       } catch (err) {
-        if (err.name !== "AbortError") alert("Share failed: " + err.message);
+        if (err.name !== "AbortError") toast("Share failed: " + err.message, "error");
       }
     } else {
-      alert("Sharing directly isn't supported on this device/browser. Try this on a phone, or use the download button below and send it manually via WhatsApp.");
+      toast("Sharing directly isn't supported on this device/browser. Try this on a phone, or use the download button below and send it manually via WhatsApp.", "error");
     }
   };
 

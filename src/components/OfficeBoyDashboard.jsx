@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import { collection, query, where, doc, updateDoc, onSnapshot } from "firebase/firestore";
 import SelfClockInOut from "./SelfClockInOut";
+import { useToast } from "./ui/useToast";
 
 export default function OfficeBoyDashboard() {
+  const toast = useToast();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,7 +33,7 @@ export default function OfficeBoyDashboard() {
         completedAt: new Date().toISOString()
       });
     } catch (err) {
-      alert("Error completing task: " + err.message);
+      toast("Error completing task: " + err.message, "error");
     }
   };
 

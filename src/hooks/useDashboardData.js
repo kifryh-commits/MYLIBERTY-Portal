@@ -78,7 +78,7 @@ export function useDashboardData({ restrictedRead = false, setActiveTab } = {}) 
       await setDoc(doc(db, "users", uid), { paymentStatus: currentStatus === "paid" ? "pending" : "paid" }, { merge: true });
       fetchData();
     } catch (err) { toast(err.message, "error"); }
-  }, [fetchData]);
+  }, [fetchData, toast]);
 
   useEffect(() => {
     const handleToggle = (e) => togglePaymentStatus(e.detail.id, e.detail.status);
