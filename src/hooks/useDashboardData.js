@@ -3,6 +3,8 @@ import { db, firebaseConfig } from "../firebase";
 import { collection, doc, setDoc, addDoc, getDocs, deleteDoc, query, where } from "firebase/firestore";
 import { getApps, initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { useToast } from "../components/ui/useToast";
+import { useConfirm } from "../components/ui/useConfirm";
 
 function getSecondaryAuth() {
   const secondaryApp = getApps().find(app => app.name === "Secondary")
@@ -35,6 +37,9 @@ const emptyFormData = {
  * screen after an edit/save, and each dashboard has its own tab list.
  */
 export function useDashboardData({ restrictedRead = false, setActiveTab } = {}) {
+  const toast = useToast();
+  const confirm = useConfirm(); // 👈 shadows native window.confirm on purpose — same call shape, styled modal, just needs "await"
+
   const [users, setUsers] = useState([]);
   const [classes, setClasses] = useState([]);
   const [applications, setApplications] = useState([]);
@@ -72,7 +77,7 @@ export function useDashboardData({ restrictedRead = false, setActiveTab } = {}) 
     try {
       await setDoc(doc(db, "users", uid), { paymentStatus: currentStatus === "paid" ? "pending" : "paid" }, { merge: true });
       fetchData();
-    } catch (err) { alert(err.message); }
+    } catch (err) { toast(err.message, "error"); }
   }, [fetchData]);
 
   useEffect(() => {
@@ -112,7 +117,7 @@ export function useDashboardData({ restrictedRead = false, setActiveTab } = {}) 
         await setDoc(doc(db, "users", uid), { ...baseData, email: formData.email });
       }
 
-      alert(editId ? "Profile updated!" : (formData.role === "student" ? "Student added to roster!" : "Account created!"));
+      toast(editId ? "Profile updated!" : (formData.role === "student" ? "Student added to roster!" : "Account created!"));
       setEditId(null);
       setFormData(emptyFormData);
       fetchData();
@@ -122,7 +127,7 @@ export function useDashboardData({ restrictedRead = false, setActiveTab } = {}) 
       // routes by what was actually saved: students go back to "students",
       // staff (admin-only) go to "directory".
       setActiveTab?.(formData.role === "student" ? "students" : "directory");
-    } catch (err) { alert(err.message); }
+    } catch (err) { toast(err.message, "error"); }
   };
 
   const handleEdit = (user) => {
@@ -140,17 +145,17 @@ export function useDashboardData({ restrictedRead = false, setActiveTab } = {}) 
 
   const handleDelete = async (uid) => {
     const user = users.find(profile => profile.id === uid);
-    if (!user || !confirm(`Are you sure you want to delete ${user.displayName || "this profile"}?`)) return;
+    if (!user || !(await confirm(`Are you sure you want to delete ${user.displayName || "this profile"}?`))) return;
 
     try {
       await deleteDoc(doc(db, "users", uid));
       fetchData();
       if (user.role === "student") {
-        alert("Student roster profile deleted.");
+        toast("Student roster profile deleted.");
       } else {
-        alert("Staff profile deleted from Firestore. The Firebase Auth account still exists and must be deleted separately in Firebase Console before this email can be registered again.");
+        toast("Staff profile deleted from Firestore. The Firebase Auth account still exists and must be deleted separately in Firebase Console before this email can be registered again.");
       }
-    } catch (err) { alert("Unable to delete profile: " + err.message); }
+    } catch (err) { toast("Unable to delete profile: " + err.message, "error"); }
   };
 
   const handleAddTodo = async ({ text, type, isPinned, assignee }) => {
@@ -161,15 +166,15 @@ export function useDashboardData({ restrictedRead = false, setActiveTab } = {}) 
         createdAt: new Date().toISOString()
       });
       fetchData();
-    } catch (err) { alert(err.message); }
+    } catch (err) { toast(err.message, "error"); }
   };
 
   const handleDeleteTodo = async (todoId) => {
-    if (!confirm("Delete this task or reminder?")) return;
+    if (!(await confirm("Delete this task or reminder?"))) return;
     try {
       await deleteDoc(doc(db, "todos", todoId));
       setTodos(current => current.filter(t => t.id !== todoId));
-    } catch (err) { alert("Error deleting task: " + err.message); }
+    } catch (err) { toast("Error deleting task: " + err.message, "error"); }
   };
 
   const handleCreateInvite = async (email, role) => {
@@ -181,16 +186,16 @@ export function useDashboardData({ restrictedRead = false, setActiveTab } = {}) 
         used: false, token
       });
       fetchData();
-      alert("Invitation generated!");
-    } catch (err) { alert(err.message); }
+      toast("Invitation generated!");
+    } catch (err) { toast(err.message, "error"); }
   };
 
   const handleDeleteInvite = async (id) => {
-    if (!confirm("Cancel this invitation?")) return;
+    if (!(await confirm("Cancel this invitation?"))) return;
     try {
       await deleteDoc(doc(db, "invites", id));
       fetchData();
-    } catch (err) { alert(err.message); }
+    } catch (err) { toast(err.message, "error"); }
   };
 
   const getStudentClasses = (studentId) => {

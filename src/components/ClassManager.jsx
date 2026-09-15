@@ -1,26 +1,14 @@
 import { useState, Fragment } from "react";
 import { db, demoUploadWorksheet } from "../firebase";
 import { collection, addDoc, deleteDoc, doc, updateDoc, arrayUnion } from "firebase/firestore";
-
-const LEVELS = ["warrior", "elite", "master", "grandmaster", "epic"];
-
-const LEVEL_STYLES = {
-  warrior: "bg-slate-100 text-slate-700",
-  elite: "bg-blue-100 text-blue-700",
-  master: "bg-purple-100 text-purple-700",
-  grandmaster: "bg-amber-100 text-amber-700",
-  epic: "bg-rose-100 text-rose-700",
-};
-
-function LevelBadge({ level }) {
-  return (
-    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${LEVEL_STYLES[level] || "bg-gray-100 text-gray-400"}`}>
-      {level || "Unset"}
-    </span>
-  );
-}
+import LevelBadge from "./ui/LevelBadge";
+import { LEVELS } from "./ui/levels";
+import { useToast } from "./ui/useToast";
+import { useConfirm } from "./ui/useConfirm";
 
 export default function ClassManager({ classes, users, instructors, unenrolledStudents, fetchData }) {
+  const toast = useToast();
+  const confirm = useConfirm(); // 👈 shadows native window.confirm on purpose — same call shape, styled modal, just needs "await"
   const [classSubTab, setClassSubTab] = useState("schedule");
   const [className, setClassName] = useState("");
   const [assignedInstructor, setAssignedInstructor] = useState("");
@@ -61,7 +49,7 @@ export default function ClassManager({ classes, users, instructors, unenrolledSt
 
     if (mismatched.length > 0) {
       const names = mismatched.map(s => `${s.displayName} (currently ${s.currentLevel})`).join(", ");
-      if (!confirm(`These students are recorded at a different level than "${classLevel}": ${names}.\n\nEnroll them into this class anyway?`)) {
+      if (!(await confirm(`These students are recorded at a different level than "${classLevel}": ${names}.\n\nEnroll them into this class anyway?`))) {
         return;
       }
     }
@@ -99,25 +87,25 @@ export default function ClassManager({ classes, users, instructors, unenrolledSt
         )
       );
 
-      alert("Success! Class scheduled.");
+      toast("Success! Class scheduled.");
       setClassName(""); setAssignedInstructor(""); setClassDay("Mon/Wed"); setClassStartDate(new Date().toISOString().slice(0, 10)); setStartTime(""); setEndTime(""); setClassLevel("warrior"); setEnrolledStudents([]); setEnrollmentDetails({});
       setSelectedFile(null); setClassRoom("");
       fetchData();
       setClassSubTab("list"); 
     } catch (err) { 
-      alert("Error: " + err.message); 
+      toast("Error: " + err.message, "error"); 
     } finally {
       setUploading(false);
     }
   };
 
   const handleDeleteClass = async (classId) => {
-    if (confirm("Are you sure you want to delete this scheduled class group?")) {
+    if (await confirm("Are you sure you want to delete this scheduled class group?")) {
       try {
         await deleteDoc(doc(db, "classes", classId));
-        alert("Class deleted successfully.");
+        toast("Class deleted successfully.");
         fetchData();
-      } catch (err) { alert(err.message); }
+      } catch (err) { toast(err.message, "error"); }
     }
   };
 
@@ -132,7 +120,7 @@ export default function ClassManager({ classes, users, instructors, unenrolledSt
     // 👈 Same mismatch warning as class creation, checked against this
     // specific class's level.
     if (student?.currentLevel && student.currentLevel !== targetLevel) {
-      if (!confirm(`${student.displayName} is recorded at "${student.currentLevel}", but this class is "${targetLevel}".\n\nEnroll anyway?`)) {
+      if (!(await confirm(`${student.displayName} is recorded at "${student.currentLevel}", but this class is "${targetLevel}".\n\nEnroll anyway?`))) {
         return;
       }
     }
@@ -150,19 +138,19 @@ export default function ClassManager({ classes, users, instructors, unenrolledSt
       setEnrollingIntoClassId(null);
       setAddStudentId(""); setAddDateJoined(new Date().toISOString().slice(0, 10));
       fetchData();
-    } catch (err) { alert("Error enrolling student: " + err.message); }
+    } catch (err) { toast("Error enrolling student: " + err.message, "error"); }
   };
 
   const handleRemoveStudentFromClass = async (cls, studentId) => {
     const student = users.find(u => u.id === studentId);
-    if (!confirm(`Remove ${student?.displayName || "this student"} from ${cls.className}?`)) return;
+    if (!(await confirm(`Remove ${student?.displayName || "this student"} from ${cls.className}?`))) return;
     try {
       await updateDoc(doc(db, "classes", cls.id), {
         studentIds: (cls.studentIds || []).filter(id => id !== studentId),
         enrollments: (cls.enrollments || []).filter(e => e.studentId !== studentId),
       });
       fetchData();
-    } catch (err) { alert("Error removing student: " + err.message); }
+    } catch (err) { toast("Error removing student: " + err.message, "error"); }
   };
 
   const handleClassSort = (field) => {
@@ -217,7 +205,7 @@ export default function ClassManager({ classes, users, instructors, unenrolledSt
       await Promise.all(studentIds.map(id => updateDoc(doc(db, "users", id), { currentLevel: level }).catch(() => {})));
       setEditingLevelKey(null);
       fetchData();
-    } catch (err) { alert("Error setting level: " + err.message); }
+    } catch (err) { toast("Error setting level: " + err.message, "error"); }
   };
 
   const toggleGroup = (key) => {
@@ -271,7 +259,7 @@ export default function ClassManager({ classes, users, instructors, unenrolledSt
         <div>
           <p className="text-xs font-bold text-slate-700">Room: <span className="font-semibold text-slate-600">{cls.classRoom || "N/A"}</span></p>
           {cls.worksheetUrl && (
-            <a href="#" onClick={(e) => { e.preventDefault(); alert(`Opening Demo Worksheet: ${cls.worksheetUrl}`); }} className="text-[10px] text-indigo-600 font-semibold hover:underline">📄 View Worksheet</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); toast(`Opening Demo Worksheet: ${cls.worksheetUrl}`); }} className="text-[10px] text-indigo-600 font-semibold hover:underline">📄 View Worksheet</a>
           )}
         </div>
         <button onClick={() => handleDeleteClass(cls.id)} className="bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-red-600 transition text-xs shrink-0">Delete Batch</button>
