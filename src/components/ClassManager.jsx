@@ -1,6 +1,7 @@
 import { useState, Fragment } from "react";
-import { db, demoUploadWorksheet } from "../firebase";
+import { db } from "../firebase";
 import { collection, addDoc, deleteDoc, doc, updateDoc, arrayUnion } from "firebase/firestore";
+import { uploadFileToCloudinary } from "../utils/cloudinaryUpload";
 import LevelBadge from "./ui/LevelBadge";
 import { LEVELS } from "./ui/levels";
 import { useToast } from "./ui/useToast";
@@ -59,7 +60,7 @@ export default function ClassManager({ classes, users, instructors, unenrolledSt
       setUploading(true);
       let fileUrl = "";
       if (selectedFile) {
-        fileUrl = await demoUploadWorksheet(selectedFile);
+        fileUrl = await uploadFileToCloudinary(selectedFile);
       }
       await addDoc(collection(db, "classes"), {
         className,
@@ -260,7 +261,7 @@ export default function ClassManager({ classes, users, instructors, unenrolledSt
         <div>
           <p className="text-xs font-bold text-slate-700">Room: <span className="font-semibold text-slate-600">{cls.classRoom || "N/A"}</span></p>
           {cls.worksheetUrl && (
-            <a href="#" onClick={(e) => { e.preventDefault(); toast(`Opening Demo Worksheet: ${cls.worksheetUrl}`); }} className="text-[10px] text-indigo-600 font-semibold hover:underline">📄 View Worksheet</a>
+            <a href={cls.worksheetUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-indigo-600 font-semibold hover:underline">📄 View Worksheet</a>
           )}
         </div>
         <button onClick={() => handleDeleteClass(cls.id)} className="bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-red-600 transition text-xs shrink-0">Delete Batch</button>

@@ -20,6 +20,10 @@ service cloud.firestore {
       return hasRole('admin');
     }
 
+    function isManager() {
+      return hasRole('manager');
+    }
+
     function isStaff() {
       return signedIn() && userProfile().role in ['admin', 'manager', 'instructor', 'marketing', 'frontoffice', 'officeboy'];
     }
@@ -30,6 +34,7 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isAdmin()
+        || isManager()
         || (isFrontOffice() && resource.data.role in ['student', 'instructor'])
         || (signedIn() && userId == request.auth.uid)
         || (isStaff() && resource.data.role == 'student');
@@ -66,7 +71,12 @@ service cloud.firestore {
       // Office now handles applications as their actual job function,
       // same as admin — approve/reject deletes the record immediately,
       // so delete needs to match update here, not stay admin-only.
-      allow read, update, delete: if isAdmin() || isFrontOffice();
+      // Manager gets read-only visibility for dashboard stats — approving/
+      // rejecting stays an Admin/Front Office job, not a Manager one.
+      // Marketing gets read-only visibility too, for the lead-count widget
+      // on their own dashboard — same reasoning, no approve/reject rights.
+      allow read: if isAdmin() || isFrontOffice() || isManager() || hasRole('marketing');
+      allow update, delete: if isAdmin() || isFrontOffice();
       allow create: if false;
     }
 
@@ -96,6 +106,7 @@ service cloud.firestore {
 
     match /progressReports/{reportId} {
       allow read: if isAdmin()
+        || isManager()
         || isFrontOffice()
         || (signedIn() && resource.data.instructorId == request.auth.uid);
       allow create: if signedIn()
@@ -109,6 +120,7 @@ service cloud.firestore {
 
     match /shifts/{shiftId} {
       allow read: if isAdmin()
+        || isManager()
         || (signedIn() && resource.data.userId == request.auth.uid);
       allow create: if isAdmin()
         || (signedIn() && request.resource.data.userId == request.auth.uid);

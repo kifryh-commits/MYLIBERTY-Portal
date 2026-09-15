@@ -4,7 +4,7 @@ import { collection, getDocs } from "firebase/firestore";
 import DashboardShell from "./DashboardShell";
 import ReportsDashboard from "./ReportsDashboard";
 import AIAssistant from "./AIAssistant";
-import SelfClockInOut from "./SelfClockInOut";
+import Kiosk from "./Kiosk";
 
 function ManagerOverview() {
   const [stats, setStats] = useState({
@@ -29,7 +29,7 @@ function ManagerOverview() {
           students: users.filter(u => u.role === "student").length,
           staff: users.filter(u => u.role !== "student" && u.role !== "admin").length,
           classes: classSnap.size,
-          applications: appSnap.docs.filter(d => d.data().status === "pending").length
+          applications: appSnap.docs.filter(d => (d.data().status || "pending") === "pending").length
         });
       } catch (err) {
         console.error("Error fetching stats:", err);
@@ -48,7 +48,7 @@ function ManagerOverview() {
           <p className="text-sm text-slate-500 mt-1">Real-time overview of school operations.</p>
         </div>
         <div className="w-full md:w-64">
-          <SelfClockInOut />
+          <Kiosk title="Manager Clock-In/Out" />
         </div>
       </div>
 
@@ -84,7 +84,7 @@ function StatCard({ label, value, color }) {
 export default function ManagerDashboard() {
   const tabs = [
     { id: "overview", label: "🏠 Overview", component: <ManagerOverview /> },
-    { id: "reports", label: "📊 Reports & Analytics", component: <ReportsDashboard isAdminView={false} isManagerView={true} /> },
+    { id: "reports", label: "📊 Reports & Analytics", component: <ReportsDashboard isAdminView={true} /> },
     { id: "ai", label: "✨ AI Assistant", component: <AIAssistant /> },
   ];
 

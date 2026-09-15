@@ -15,20 +15,6 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// 👈 Added "export" so you can import and use this in your other files!
-export const demoUploadWorksheet = async (file) => {
-  // 👈 Added this log to reference the "file" variable and satisfy ESLint!
-  console.log("Simulating upload for file:", file?.name || "unnamed file");
-
-  // Simulates a 1.5-second network upload delay
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-
-  // Returns a placeholder file path
-  const mockDownloadURL = "demo_lesson_material_placeholder.pdf";
-  
-  return mockDownloadURL;
-};
-
 
 // 👈 Enable the offline database cache (Called once cleanly)
 enableIndexedDbPersistence(db).catch((err) => {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import SelfClockInOut from "./SelfClockInOut";
+import { collection, getDocs } from "firebase/firestore";
+import Kiosk from "./Kiosk";
 
 export default function StaffDashboard() {
   const [leadCount, setLeadCount] = useState(0);
@@ -10,8 +10,10 @@ export default function StaffDashboard() {
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const q = query(collection(db, "applications"), where("status", "==", "pending"));
-        const snap = await getDocs(q);
+        // Every doc in "applications" is inherently pending — approve/reject
+        // deletes the record immediately, so there's no "status" field to
+        // filter on. The collection size IS the pending count.
+        const snap = await getDocs(collection(db, "applications"));
         setLeadCount(snap.size);
       } catch (err) {
         console.error("Error fetching leads:", err);
@@ -43,7 +45,7 @@ export default function StaffDashboard() {
           Use the widget below to clock in and out — this keeps attendance tied to actually being on site.
         </p>
         <div className="pt-2">
-          <SelfClockInOut />
+          <Kiosk title="Marketing Staff Clock-In/Out" />
         </div>
       </div>
       

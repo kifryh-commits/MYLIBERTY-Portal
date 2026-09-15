@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import { collection, query, where, doc, updateDoc, onSnapshot } from "firebase/firestore";
-import SelfClockInOut from "./SelfClockInOut";
+import Kiosk from "./Kiosk";
 import { useToast } from "./ui/useToast";
 
 export default function OfficeBoyDashboard() {
@@ -75,7 +75,7 @@ export default function OfficeBoyDashboard() {
 
       <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 mt-6">
         <p className="text-[10px] font-bold text-blue-700 uppercase mb-3 text-center">Office Boy Attendance</p>
-        <SelfClockInOut />
+        <Kiosk title="Office Boy Clock-In/Out" />
       </div>
     </div>
   );
