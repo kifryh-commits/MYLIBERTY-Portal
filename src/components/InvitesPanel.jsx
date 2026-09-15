@@ -21,7 +21,7 @@ export default function InvitesPanel({ invites, onCreateInvite, onDeleteInvite }
   const pendingInvites = invites.filter(inv => !inv.used);
 
   return (
-    <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-150 max-w-6xl mx-auto space-y-6">
+    <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-150 max-w-6xl mx-auto space-y-6">
       <div>
         <h3 className="font-bold text-slate-800 text-base">Invite Staff</h3>
         <p className="text-xs text-slate-500">Generate a unique link for new staff to set up their own accounts.</p>
@@ -33,13 +33,13 @@ export default function InvitesPanel({ invites, onCreateInvite, onDeleteInvite }
           placeholder="Staff Email"
           value={inviteEmail}
           onChange={e => setInviteEmail(e.target.value)}
-          className="flex-1 p-2.5 border rounded-lg text-sm"
+          className="min-h-12 flex-1 p-2.5 border rounded-xl text-sm"
           required
         />
         <select
           value={inviteRole}
           onChange={e => setInviteRole(e.target.value)}
-          className="p-2.5 border rounded-lg bg-white font-bold text-sm"
+          className="min-h-12 p-2.5 border rounded-xl bg-white font-bold text-sm"
         >
           <option value="instructor">Instructor</option>
           <option value="manager">Manager</option>
@@ -49,7 +49,7 @@ export default function InvitesPanel({ invites, onCreateInvite, onDeleteInvite }
         </select>
         <button
           type="submit"
-          className="bg-[#1a3a8f] text-white px-6 py-2.5 rounded-lg font-bold hover:bg-[#122b6e] transition text-sm"
+          className="min-h-12 bg-[#1a3a8f] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#122b6e] transition text-sm"
         >
           Generate Link
         </button>
@@ -79,13 +79,13 @@ export default function InvitesPanel({ invites, onCreateInvite, onDeleteInvite }
                       navigator.clipboard.writeText(link);
                       toast("Copied to clipboard: " + link);
                     }}
-                    className="flex-1 md:flex-none bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-emerald-700 transition text-[10px]"
+                    className="min-h-11 flex-1 md:flex-none bg-emerald-600 text-white px-3 py-1.5 rounded-xl font-bold hover:bg-emerald-700 transition text-xs"
                   >
                     📋 Copy Link
                   </button>
                   <button
                     onClick={() => onDeleteInvite(inv.id)}
-                    className="flex-1 md:flex-none bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-red-600 transition text-[10px]"
+                    className="min-h-11 flex-1 md:flex-none bg-red-500 text-white px-3 py-1.5 rounded-xl font-bold hover:bg-red-600 transition text-xs"
                   >
                     Delete
                   </button>

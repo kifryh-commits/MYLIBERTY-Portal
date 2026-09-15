@@ -324,35 +324,35 @@ export default function ClassManager({ classes, users, instructors, unenrolledSt
   );
 
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-200 max-w-5xl mx-auto text-sm space-y-4 shadow-sm">
+    <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 max-w-5xl mx-auto text-sm space-y-4 shadow-sm">
       {/* Sub-Tab Switcher */}
-      <div className="flex gap-2 border-b pb-2 font-bold text-xs uppercase select-none">
-        <button onClick={() => setClassSubTab("schedule")} className={`px-3 py-1.5 rounded-lg transition duration-150 ${classSubTab === "schedule" ? "bg-[#1a3a8f] text-white shadow-sm" : "bg-slate-100 text-slate-600 border"}`}>📅 Schedule Class</button>
-        <button onClick={() => setClassSubTab("list")} className={`px-3 py-1.5 rounded-lg transition duration-150 ${classSubTab === "list" ? "bg-[#1a3a8f] text-white shadow-sm" : "bg-slate-100 text-slate-600 border"}`}>📊 Active Classes Table</button>
+      <div className="grid grid-cols-2 gap-2 border-b pb-3 font-bold text-xs uppercase select-none">
+        <button onClick={() => setClassSubTab("schedule")} className={`min-h-12 px-3 py-1.5 rounded-xl transition duration-150 ${classSubTab === "schedule" ? "bg-[#1a3a8f] text-white shadow-sm" : "bg-slate-100 text-slate-600 border"}`}>📅 Schedule Class</button>
+        <button onClick={() => setClassSubTab("list")} className={`min-h-12 px-3 py-1.5 rounded-xl transition duration-150 ${classSubTab === "list" ? "bg-[#1a3a8f] text-white shadow-sm" : "bg-slate-100 text-slate-600 border"}`}>📊 Active Classes</button>
       </div>
 
       {classSubTab === "schedule" && (
         <form onSubmit={handleCreateClass} className="space-y-3.5 max-w-xl mx-auto">
           <h3 className="font-bold text-slate-800 text-base mb-2">Schedule Class Group</h3>
-          <input type="text" placeholder="Class Name" value={className} onChange={e => setClassName(e.target.value)} className="w-full p-2.5 border rounded-lg" required />
+          <input type="text" placeholder="Class Name" value={className} onChange={e => setClassName(e.target.value)} className="min-h-12 w-full p-2.5 border rounded-xl" required />
           
           <label className="block text-[10px] font-bold text-slate-500 uppercase">Class Room / Location</label>
-          <input type="text" placeholder="e.g., Room A, Lab 2" value={classRoom} onChange={e => setClassRoom(e.target.value)} className="w-full p-2.5 border rounded-lg bg-white" required />
+          <input type="text" placeholder="e.g., Room A, Lab 2" value={classRoom} onChange={e => setClassRoom(e.target.value)} className="min-h-12 w-full p-2.5 border rounded-xl bg-white" required />
 
           <label className="block text-[10px] font-bold text-slate-500 uppercase">Assign Instructor</label>
-          <select value={assignedInstructor} onChange={e => setAssignedInstructor(e.target.value)} className="w-full p-2.5 border rounded-lg bg-white font-bold" required>
+          <select value={assignedInstructor} onChange={e => setAssignedInstructor(e.target.value)} className="min-h-12 w-full p-2.5 border rounded-xl bg-white font-bold" required>
             <option value="">Select Instructor...</option>
             {instructors.map(inst => <option key={inst.id} value={inst.id}>{inst.displayName}</option>)}
           </select>
 
           <label className="block text-[10px] font-bold text-slate-500 uppercase">Class Level</label>
-          <select value={classLevel} onChange={e => setClassLevel(e.target.value)} className="w-full p-2.5 border rounded-lg bg-white font-bold" required>
+          <select value={classLevel} onChange={e => setClassLevel(e.target.value)} className="min-h-12 w-full p-2.5 border rounded-xl bg-white font-bold" required>
             {LEVELS.map(lvl => <option key={lvl} value={lvl}>{lvl.charAt(0).toUpperCase() + lvl.slice(1)}</option>)}
           </select>
           <p className="text-[10px] text-slate-400 -mt-2">Every student enrolled below will be recorded at this level.</p>
           
           <label className="block text-[10px] font-bold text-slate-500 uppercase">Select Schedule Days</label>
-          <select value={classDay} onChange={e => setClassDay(e.target.value)} className="w-full p-2.5 border rounded-lg bg-white font-bold">
+          <select value={classDay} onChange={e => setClassDay(e.target.value)} className="min-h-12 w-full p-2.5 border rounded-xl bg-white font-bold">
             <option value="Mon/Wed">Mon/Wed</option>
             <option value="Tue/Thu">Tue/Thu</option>
             <option value="Sat/Sun">Sat/Sun</option>
@@ -360,16 +360,16 @@ export default function ClassManager({ classes, users, instructors, unenrolledSt
           </select>
 
           <label className="block text-[10px] font-bold text-slate-500 uppercase">Class Start Date</label>
-          <input type="date" value={classStartDate} onChange={e => setClassStartDate(e.target.value)} className="w-full p-2.5 border rounded-lg bg-white" required />
+          <input type="date" value={classStartDate} onChange={e => setClassStartDate(e.target.value)} className="min-h-12 w-full p-2.5 border rounded-xl bg-white" required />
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Start Time</label>
-              <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full p-2.5 border rounded-lg bg-white" required />
+              <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="min-h-12 w-full p-2.5 border rounded-xl bg-white" required />
             </div>
             <div>
               <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">End Time</label>
-              <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="w-full p-2.5 border rounded-lg bg-white" required />
+              <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="min-h-12 w-full p-2.5 border rounded-xl bg-white" required />
             </div>
           </div>
 
@@ -412,14 +412,14 @@ export default function ClassManager({ classes, users, instructors, unenrolledSt
             </div>
           )}
 
-          <button type="submit" disabled={uploading} className="w-full bg-[#1a3a8f] text-white p-3 rounded-xl font-bold hover:bg-[#122b6e] transition">
+          <button type="submit" disabled={uploading} className="min-h-14 w-full bg-[#1a3a8f] text-white p-3 rounded-2xl font-black hover:bg-[#122b6e] active:scale-[0.98] transition">
             {uploading ? "⏳ Uploading Worksheet..." : "Create & Schedule Class"}
           </button>
         </form>
       )}
 
       {classSubTab === "list" && (
-        <div className="overflow-x-auto">
+        <div>
           <div className="flex justify-between items-start gap-2 mb-1">
             <h3 className="font-bold text-slate-800 text-base">Active Classes</h3>
             <button
@@ -444,6 +444,34 @@ export default function ClassManager({ classes, users, instructors, unenrolledSt
             </button>
           </div>
           <p className="text-[11px] text-slate-400 mb-3">Classes with the same name, schedule, instructor and level are grouped into one row — click a row to expand and manage individual batches.</p>
+          <div className="space-y-3 md:hidden">
+            {classGroups.map(group => {
+              const teacher = users.find(u => u.id === group.instructorId);
+              const totalStudents = group.items.reduce((sum, cls) => sum + (cls.studentIds || []).length, 0);
+              const isExpanded = expandedGroups.has(group.key);
+              return (
+                <article key={group.key} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <button onClick={() => toggleGroup(group.key)} className="w-full text-left">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h4 className="font-black text-slate-800">{group.className}</h4>
+                        <p className="mt-1 text-xs font-semibold text-[#1a3a8f]">{teacher?.displayName || "Unassigned"}</p>
+                      </div>
+                      <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black text-[#1a3a8f]">{totalStudents} students</span>
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500">{group.schedule || "Schedule not set"}</p>
+                    <div className="mt-3 flex items-center justify-between">
+                      {group.classLevel ? <LevelBadge level={group.classLevel} /> : <span className="text-xs font-bold text-amber-700">Level not set</span>}
+                      <span className="text-xs font-bold text-slate-500">{isExpanded ? "Hide details" : "Manage class"}</span>
+                    </div>
+                  </button>
+                  {isExpanded && <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">{group.items.map(cls => renderBatchCard(cls))}</div>}
+                </article>
+              );
+            })}
+            {classGroups.length === 0 && <p className="rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-500">No active classes yet.</p>}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
               <tr className="border-b bg-slate-50 text-slate-500 font-bold uppercase text-xs select-none">
@@ -511,6 +539,7 @@ export default function ClassManager({ classes, users, instructors, unenrolledSt
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

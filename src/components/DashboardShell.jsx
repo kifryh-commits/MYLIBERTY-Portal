@@ -1,4 +1,5 @@
 import { useState } from "react";
+import MobileDashboardShell from "./MobileDashboardShell";
 
 /**
  * tabs: [{ id, label, component, hidden? }]
@@ -32,10 +33,19 @@ export default function DashboardShell({ tabs, defaultTab, activeTab: controlled
   const active = tabs.find(t => t.id === activeTab);
 
   return (
-    <div className="flex flex-col md:flex-row gap-4">
+    <>
+      <MobileDashboardShell
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        title={title}
+        extraSidebarContent={extraSidebarContent}
+      />
+
+      <div className="hidden md:flex md:flex-row gap-4">
       {/* Sidebar */}
-      <div className="w-full md:w-1/4 flex md:flex-col gap-2 overflow-x-auto md:overflow-visible">
-        {title && <h2 className="text-xl font-bold text-[#1a3a8f] mb-2 hidden md:block">{title}</h2>}
+      <div className="w-1/4 flex flex-col gap-2 overflow-visible">
+        {title && <h2 className="text-xl font-bold text-[#1a3a8f] mb-2">{title}</h2>}
         {extraSidebarContent}
         {tabs.filter(tab => !tab.hidden).map(tab => (
           <button
@@ -51,9 +61,10 @@ export default function DashboardShell({ tabs, defaultTab, activeTab: controlled
       </div>
 
       {/* Content */}
-      <div className="w-full md:w-3/4">
+      <div className="w-3/4">
         {active?.component}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

@@ -55,16 +55,16 @@ export default function TeachingMaterial() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-4xl mx-auto text-xs">
-      <div className="bg-white p-4 rounded-xl border space-y-2">
+      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-3">
         <h3 className="font-bold text-gray-700 text-sm mb-2">Add Teaching Material</h3>
         <form onSubmit={handleAdd} className="space-y-2">
-          <input type="text" placeholder="Title (e.g. Unit 3 Worksheet)" value={title} onChange={e => setTitle(e.target.value)} className="w-full p-2 border rounded" required />
-          <input type="url" placeholder="Link (Google Drive, YouTube, etc.)" value={url} onChange={e => setUrl(e.target.value)} className="w-full p-2 border rounded" required />
-          <button type="submit" className="w-full bg-red-600 text-white p-2 rounded-lg font-bold hover:bg-red-700">Add Material</button>
+          <input type="text" placeholder="Title (e.g. Unit 3 Worksheet)" value={title} onChange={e => setTitle(e.target.value)} className="min-h-12 w-full p-2.5 border rounded-xl" required />
+          <input type="url" placeholder="Link (Google Drive, YouTube, etc.)" value={url} onChange={e => setUrl(e.target.value)} className="min-h-12 w-full p-2.5 border rounded-xl" required />
+          <button type="submit" className="min-h-12 w-full bg-[#1a3a8f] text-white p-2 rounded-xl font-bold hover:bg-[#122b6e] active:scale-[0.98]">Add Material</button>
         </form>
       </div>
 
-      <div className="bg-white p-4 rounded-xl border">
+      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200">
         <h3 className="font-bold text-gray-700 text-sm mb-3">Your Materials</h3>
         {loading ? (
           <p className="text-gray-400 text-center py-4">Loading...</p>
@@ -73,11 +73,11 @@ export default function TeachingMaterial() {
         ) : (
           <div className="space-y-2 max-h-72 overflow-y-auto">
             {materials.map(m => (
-              <div key={m.id} className="flex justify-between items-center p-2.5 bg-gray-50 border rounded">
+              <div key={m.id} className="flex justify-between items-center gap-3 p-3 bg-gray-50 border rounded-xl">
                 <a href={m.url} target="_blank" rel="noopener noreferrer" className="text-indigo-700 font-semibold hover:underline truncate pr-2">
                   {m.title}
                 </a>
-                <button onClick={() => handleDelete(m.id)} className="text-red-500 hover:underline text-[10px] shrink-0">Remove</button>
+                <button onClick={() => handleDelete(m.id)} className="min-h-10 rounded-lg px-2 text-red-600 hover:bg-rose-50 text-xs font-bold shrink-0">Remove</button>
               </div>
             ))}
           </div>

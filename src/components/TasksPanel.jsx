@@ -52,14 +52,14 @@ export default function TasksPanel({ todos, onAddTodo, onDeleteTodo }) {
             placeholder="Add task / appointment / deadline..."
             value={newTodo}
             onChange={e => setNewTodo(e.target.value)}
-            className="w-full p-2.5 border rounded-lg"
+            className="min-h-12 w-full p-2.5 border rounded-xl"
             required
           />
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <select
               value={todoType}
               onChange={e => setTodoType(e.target.value)}
-              className="flex-1 p-2.5 border rounded-lg bg-white font-bold"
+              className="min-h-12 p-2.5 border rounded-xl bg-white font-bold"
             >
               <option value="task">Task</option>
               <option value="appointment">Appointment</option>
@@ -68,12 +68,12 @@ export default function TasksPanel({ todos, onAddTodo, onDeleteTodo }) {
             <select
               value={todoAssignee}
               onChange={e => setTodoAssignee(e.target.value)}
-              className="flex-1 p-2.5 border rounded-lg bg-white font-bold"
+              className="min-h-12 p-2.5 border rounded-xl bg-white font-bold"
             >
               <option value="all">Everyone</option>
               <option value="officeboy">Office Boy</option>
             </select>
-            <label className="flex items-center gap-1.5 font-bold text-xs text-slate-600">
+            <label className="col-span-2 flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-slate-50 font-bold text-xs text-slate-600">
               <input
                 type="checkbox"
                 checked={todoPinned}
@@ -83,7 +83,7 @@ export default function TasksPanel({ todos, onAddTodo, onDeleteTodo }) {
           </div>
           <button
             type="submit"
-            className="w-full bg-[#1a3a8f] text-white p-3 rounded-xl font-bold hover:bg-[#122b6e] transition"
+            className="min-h-14 w-full bg-[#1a3a8f] text-white p-3 rounded-2xl font-black hover:bg-[#122b6e] active:scale-[0.98] transition"
           >
             Add Item
           </button>
@@ -93,7 +93,7 @@ export default function TasksPanel({ todos, onAddTodo, onDeleteTodo }) {
           {todos.map(t => (
             <div
               key={t.id}
-              className="p-2.5 bg-slate-50 border border-slate-150 rounded-lg flex justify-between items-center text-xs gap-2"
+              className="p-3 bg-slate-50 border border-slate-150 rounded-xl flex justify-between items-center text-xs gap-2"
             >
               <span>
                 <span className="font-bold uppercase text-[9px] mr-2 bg-slate-200 px-1.5 py-0.5 rounded text-slate-600">
@@ -103,7 +103,7 @@ export default function TasksPanel({ todos, onAddTodo, onDeleteTodo }) {
               </span>
               <button
                 onClick={() => onDeleteTodo(t.id)}
-                className="text-red-600 hover:text-red-800 font-bold text-[10px] shrink-0"
+                className="min-h-10 rounded-lg px-2 text-red-600 hover:bg-rose-50 font-bold text-xs shrink-0"
                 title="Delete task"
               >
                 Delete

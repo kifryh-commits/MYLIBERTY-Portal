@@ -108,7 +108,7 @@ export default function Kiosk({ title = "Kiosk Station", studentsOnly = false })
   }, [kioskScanning, studentsOnly]);
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-md mx-auto text-center space-y-4 relative overflow-hidden">
+    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 max-w-md mx-auto text-center space-y-4 relative overflow-hidden">
       {/* 👈 Success/Error Message Overlay */}
       {status.message && (
         <div className={`absolute inset-0 z-50 flex items-center justify-center p-6 text-white font-bold animate-in fade-in zoom-in duration-300 ${status.type === "error" ? "bg-red-600/95" : "bg-emerald-600/95"}`}>
@@ -119,33 +119,41 @@ export default function Kiosk({ title = "Kiosk Station", studentsOnly = false })
         </div>
       )}
 
-      <h3 className="font-bold text-slate-800 text-base">{title}</h3>
+      <div className="space-y-1">
+        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-xl">📷</div>
+        <h3 className="font-black text-slate-800 text-base">{title}</h3>
+        <p className="text-xs leading-relaxed text-slate-500">Tap below, then hold a QR badge inside the camera frame.</p>
+      </div>
       {!kioskScanning ? (
-        <button onClick={() => setKioskScanning(true)} className="bg-[#1a3a8f] text-white px-6 py-3 rounded-xl hover:bg-[#122b6e] font-bold w-full text-sm transition duration-150 shadow-sm">
-          📷 Open Kiosk Camera
+        <button onClick={() => setKioskScanning(true)} className="min-h-14 bg-[#1a3a8f] text-white px-6 py-3 rounded-2xl hover:bg-[#122b6e] active:scale-[0.98] font-black w-full text-base transition duration-150 shadow-md shadow-blue-900/15">
+          📷 Scan QR Badge
         </button>
       ) : (
         <div className="space-y-4">
-          <div id="kiosk-reader" className="w-full rounded-xl overflow-hidden border border-slate-200"></div>
-          <button onClick={() => setKioskScanning(false)} className="text-sm text-red-600 hover:text-red-700 font-bold hover:underline transition">
-            Close Camera
+          <div className="rounded-2xl border-2 border-[#1a3a8f]/15 bg-slate-50 p-2">
+            <div id="kiosk-reader" className="w-full overflow-hidden rounded-xl"></div>
+          </div>
+          <p className="text-xs text-slate-500">Place the QR code in the square. The scan completes automatically.</p>
+          <button onClick={() => setKioskScanning(false)} className="min-h-12 w-full rounded-xl bg-rose-50 px-4 py-2 text-sm text-red-700 hover:bg-rose-100 active:scale-[0.98] font-bold transition">
+            Cancel camera
           </button>
         </div>
       )}
       {pendingClockIn && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-5 w-full max-w-sm space-y-4 text-left shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-end bg-black/50 p-0 sm:items-center sm:p-4">
+          <div className="w-full max-w-sm space-y-4 rounded-t-3xl bg-white p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-left shadow-xl sm:rounded-2xl sm:pb-5">
+            <div className="mx-auto h-1.5 w-10 rounded-full bg-slate-200 sm:hidden" />
             <div>
-              <h4 className="font-bold text-slate-800">Confirm instructor class</h4>
+              <h4 className="font-black text-slate-800">Confirm instructor class</h4>
               <p className="text-xs text-slate-500 mt-1">Select the class {pendingClockIn.userData.displayName} is teaching today.</p>
             </div>
-            <select value={selectedClassId} onChange={event => setSelectedClassId(event.target.value)} className="w-full p-2.5 border rounded-lg bg-white text-sm">
+            <select value={selectedClassId} onChange={event => setSelectedClassId(event.target.value)} className="min-h-12 w-full p-2.5 border rounded-xl bg-white text-sm">
               <option value="">Select class...</option>
               {pendingClockIn.classes.map(cls => <option key={cls.id} value={cls.id}>{cls.className} · {cls.startTime || "Time not set"}</option>)}
             </select>
             <div className="flex gap-2">
-              <button onClick={() => { setPendingClockIn(null); setSelectedClassId(""); }} className="flex-1 p-2.5 rounded-lg bg-slate-100 text-slate-700 font-bold">Cancel</button>
-              <button onClick={createShift} disabled={!selectedClassId} className="flex-1 p-2.5 rounded-lg bg-[#1a3a8f] text-white font-bold disabled:opacity-50">Confirm Clock-In</button>
+              <button onClick={() => { setPendingClockIn(null); setSelectedClassId(""); }} className="min-h-12 flex-1 p-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold">Cancel</button>
+              <button onClick={createShift} disabled={!selectedClassId} className="min-h-12 flex-1 p-2.5 rounded-xl bg-[#1a3a8f] text-white font-bold disabled:opacity-50">Clock In</button>
             </div>
           </div>
         </div>

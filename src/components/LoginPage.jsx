@@ -96,8 +96,8 @@ export default function LoginPage({ onLogin, loading }) {
       </div>
 
       {/* Right Panel: Clean Floating Login Card */}
-      <div className="flex flex-1 items-center justify-center p-6 sm:p-12">
-        <div className="w-full max-w-md bg-white p-8 sm:p-10 rounded-2xl shadow-sm border border-slate-150 space-y-6 transition">
+      <div className="flex flex-1 items-center justify-center p-4 sm:p-12">
+        <div className="w-full max-w-md bg-white p-6 sm:p-10 rounded-2xl shadow-sm border border-slate-150 space-y-6 transition">
           
           {/* Logo shows here instead on small/mobile screens */}
           <div className="text-center md:hidden space-y-3">
@@ -122,7 +122,7 @@ export default function LoginPage({ onLogin, loading }) {
                 placeholder="teacher@myliberty.com" 
                 value={email} 
                 onChange={e => setEmail(e.target.value)} 
-                className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:border-[#1a3a8f] focus:ring-1 focus:ring-[#1a3a8f] outline-none transition font-medium" 
+                className="min-h-12 w-full p-3 border border-slate-200 rounded-xl text-base focus:border-[#1a3a8f] focus:ring-1 focus:ring-[#1a3a8f] outline-none transition font-medium"
                 required 
               />
             </div>
@@ -134,7 +134,7 @@ export default function LoginPage({ onLogin, loading }) {
                 placeholder="••••••••" 
                 value={password} 
                 onChange={e => setPassword(e.target.value)} 
-                className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:border-[#1a3a8f] focus:ring-1 focus:ring-[#1a3a8f] outline-none transition font-medium" 
+                className="min-h-12 w-full p-3 border border-slate-200 rounded-xl text-base focus:border-[#1a3a8f] focus:ring-1 focus:ring-[#1a3a8f] outline-none transition font-medium"
                 required 
               />
             </div>
@@ -142,7 +142,7 @@ export default function LoginPage({ onLogin, loading }) {
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full bg-[#1a3a8f] text-white p-3.5 rounded-xl font-bold hover:bg-[#122b6e] transition duration-150 shadow-md flex items-center justify-center gap-2 mt-2 disabled:opacity-50 text-sm select-none"
+              className="min-h-14 w-full bg-[#1a3a8f] text-white p-3.5 rounded-2xl font-black hover:bg-[#122b6e] transition duration-150 shadow-md flex items-center justify-center gap-2 mt-2 disabled:opacity-50 text-base select-none"
             >
               {loading ? "⏳ Authenticating..." : "Sign In to Dashboard"}
             </button>

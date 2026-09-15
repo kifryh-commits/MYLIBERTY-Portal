@@ -60,14 +60,14 @@ export default function StudentRoster({ students, getStudentClasses, setSelected
   };
 
   return (
-    <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 max-w-6xl mx-auto">
+    <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 max-w-6xl mx-auto">
       {/* Header Panel */}
-      <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-150">
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4 pb-3 border-b border-slate-150">
         <h3 className="font-bold text-slate-800 text-base">🎓 Student Roster</h3>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2">
           <button
             onClick={handlePrint}
-            className="bg-slate-100 text-slate-600 border px-3 py-1 rounded-full font-bold text-xs hover:bg-slate-200 transition"
+            className="min-h-10 bg-slate-100 text-slate-600 border px-3 py-1 rounded-xl font-bold text-xs hover:bg-slate-200 transition"
           >
             🖨️ Print
           </button>
@@ -82,11 +82,76 @@ export default function StudentRoster({ students, getStudentClasses, setSelected
         placeholder="🔍 Search students by name or phone..."
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}
-        className="w-full p-2.5 border rounded-lg mb-4 text-sm"
+        className="min-h-12 w-full p-2.5 border rounded-xl mb-4 text-sm"
       />
 
-      {/* Table Panel */}
-      <div className="overflow-x-auto">
+      {/* Phone cards: fast to scan with one thumb, while the full table remains
+          available unchanged on tablet and desktop. */}
+      <div className="space-y-3 md:hidden">
+        {sortedStudents.map(s => {
+          const studentClasses = s.studentClasses;
+          const classNames = studentClasses.length
+            ? studentClasses.map(c => c.className).join(", ")
+            : "Unassigned";
+          return (
+            <article key={s.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h4 className="truncate text-sm font-black text-slate-800">{s.displayName || "Unnamed student"}</h4>
+                  <p className="mt-0.5 text-[11px] text-slate-400">ID: {s.id}</p>
+                </div>
+                {readOnly ? (
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${s.paymentStatus === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
+                    {s.paymentStatus === "paid" ? "Paid" : "Payment pending"}
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => setPaymentStudent(s)}
+                    className={`min-h-9 shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${s.paymentStatus === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}
+                  >
+                    {s.paymentStatus === "paid" ? "Paid" : "Payment"}
+                  </button>
+                )}
+              </div>
+
+              <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-y border-slate-100 py-3 text-xs">
+                <div>
+                  <dt className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Parent</dt>
+                  <dd className="mt-0.5 font-semibold text-slate-700">{s.parentName || "N/A"}</dd>
+                  <dd className="text-slate-500">{s.parentPhone || "No phone"}</dd>
+                </div>
+                <div>
+                  <dt className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Education</dt>
+                  <dd className="mt-0.5 font-semibold text-slate-700">{s.educationLevel || s.schoolOrJob || "N/A"}</dd>
+                  <dd className="text-slate-500">Joined: {s.effectiveJoinedDate || "N/A"}</dd>
+                </div>
+                <div className="col-span-2">
+                  <dt className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Class</dt>
+                  <dd className={`mt-0.5 font-bold ${studentClasses.length ? "text-[#1a3a8f]" : "text-amber-700"}`}>{classNames}</dd>
+                </div>
+              </dl>
+
+              {(!readOnly || setSelectedStudent) && (
+                <div className="mt-3 flex gap-2">
+                  {setSelectedStudent && (
+                    <button onClick={() => setSelectedStudent(s)} className="min-h-11 flex-1 rounded-xl bg-emerald-600 px-3 text-xs font-bold text-white active:scale-[0.98]">Badge</button>
+                  )}
+                  {!readOnly && (
+                    <>
+                      <button onClick={() => handleEdit(s)} className="min-h-11 flex-1 rounded-xl bg-blue-600 px-3 text-xs font-bold text-white active:scale-[0.98]">Edit</button>
+                      <button onClick={() => handleDelete(s.id)} className="min-h-11 flex-1 rounded-xl border border-red-200 bg-rose-50 px-3 text-xs font-bold text-red-700 active:scale-[0.98]">Delete</button>
+                    </>
+                  )}
+                </div>
+              )}
+            </article>
+          );
+        })}
+        {sortedStudents.length === 0 && <p className="rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-500">No students match this search.</p>}
+      </div>
+
+      {/* Full table is easier to compare on a wider screen. */}
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-left border-collapse text-sm">
           <thead>
             <tr className="border-b bg-slate-50 text-slate-500 font-bold uppercase text-xs select-none">

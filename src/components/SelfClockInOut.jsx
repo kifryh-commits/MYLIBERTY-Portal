@@ -89,23 +89,26 @@ export default function SelfClockInOut() {
   if (loading) return null;
 
   return (
-    <div className="bg-white p-4 rounded-xl border max-w-md mx-auto text-center space-y-2">
-      <h3 className="font-bold text-gray-700 text-sm">Your Shift</h3>
+    <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm max-w-md mx-auto text-center space-y-3">
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#1a3a8f]">Personal attendance</p>
+        <h3 className="mt-1 font-black text-slate-800 text-base">Your Shift</h3>
+      </div>
       {!activeShift && (
-        <select value={selectedClassId} onChange={event => setSelectedClassId(event.target.value)} className="w-full p-2 border rounded-lg bg-white text-xs" required>
+        <select value={selectedClassId} onChange={event => setSelectedClassId(event.target.value)} className="min-h-12 w-full p-2.5 border rounded-xl bg-white text-sm" required>
           <option value="">Select today&apos;s class...</option>
           {todayClasses.map(cls => <option key={cls.id} value={cls.id}>{cls.className} · {cls.startTime || "Time not set"}</option>)}
         </select>
       )}
       {!activeShift && todayClasses.length === 0 && <p className="text-xs text-slate-400">No fixed class is scheduled for today.</p>}
-      <p className={`font-bold uppercase text-[10px] ${activeShift ? "text-green-700" : "text-gray-400"}`}>
+      <p className={`rounded-full px-3 py-1.5 font-black uppercase text-[10px] ${activeShift ? "bg-emerald-50 text-green-700" : "bg-slate-100 text-slate-500"}`}>
         {activeShift ? `Clocked in since ${new Date(activeShift.clockIn).toLocaleTimeString()}` : "Not clocked in"}
       </p>
       {activeShift?.punctualityStatus && <p className={`text-xs font-bold ${activeShift.punctualityStatus === "On time" ? "text-green-700" : "text-amber-700"}`}>{activeShift.punctualityStatus} · {activeShift.className}</p>}
       <button
         onClick={handleToggle}
         disabled={!activeShift && !selectedClassId}
-        className={`w-full p-2 rounded-lg font-bold text-white ${activeShift ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}`}
+        className={`min-h-14 w-full rounded-2xl p-2 font-black text-base text-white shadow-sm active:scale-[0.98] ${activeShift ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}`}
       >
         {activeShift ? "⏰ Clock Out" : "⏰ Clock In"}
       </button>

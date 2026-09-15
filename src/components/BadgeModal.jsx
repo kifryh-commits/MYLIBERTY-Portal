@@ -22,8 +22,9 @@ export default function BadgeModal({ person, onClose }) {
   if (!person) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white p-6 rounded-2xl shadow-xl max-w-xs w-full text-center border relative">
+    <div className="fixed inset-0 bg-black/50 flex items-end justify-center p-0 z-50 sm:items-center sm:p-4">
+      <div className="bg-white p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] rounded-t-3xl shadow-xl max-w-xs w-full text-center border relative sm:rounded-2xl sm:p-6">
+        <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-slate-200 sm:hidden" />
         <div className="border-2 border-indigo-600 p-4 rounded-xl bg-gradient-to-br from-indigo-50 to-white text-xs space-y-3">
           <h4 className="font-black text-indigo-900 text-sm tracking-wider uppercase">
             {person.role === "student" ? "Student ID Badge" : "Staff ID Badge"}
@@ -43,13 +44,13 @@ export default function BadgeModal({ person, onClose }) {
         <div className="flex gap-2 mt-4 text-sm">
           <button
             onClick={() => window.print()}
-            className="flex-1 bg-indigo-600 text-white p-2.5 rounded-xl font-bold hover:bg-indigo-700"
+            className="min-h-12 flex-1 bg-indigo-600 text-white p-2.5 rounded-xl font-bold hover:bg-indigo-700"
           >
             🖨️ Print
           </button>
           <button
             onClick={onClose}
-            className="flex-1 bg-slate-200 text-slate-700 p-2.5 rounded-xl font-bold hover:bg-slate-300"
+            className="min-h-12 flex-1 bg-slate-200 text-slate-700 p-2.5 rounded-xl font-bold hover:bg-slate-300"
           >
             Close
           </button>

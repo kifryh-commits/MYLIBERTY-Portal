@@ -75,7 +75,7 @@ export default function StudentProgressForm({ classes, students }) {
   };
 
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-200 max-w-3xl mx-auto space-y-5 text-sm">
+    <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 max-w-3xl mx-auto space-y-5 text-sm">
       <div>
         <h3 className="font-bold text-slate-800 text-base">Student Progress</h3>
         <p className="text-slate-500 text-xs mt-1">Record the latest assessment for one student in your assigned class.</p>
@@ -85,25 +85,25 @@ export default function StudentProgressForm({ classes, students }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <label className="text-[10px] font-bold text-slate-500 uppercase">
             Class
-            <select value={classId} onChange={handleClassChange} className="w-full mt-1 p-2.5 border rounded-lg bg-white text-sm" required>
+            <select value={classId} onChange={handleClassChange} className="min-h-12 w-full mt-1 p-2.5 border rounded-xl bg-white text-sm" required>
               <option value="">Select class...</option>
               {classes.map(cls => <option key={cls.id} value={cls.id}>{cls.className}</option>)}
             </select>
           </label>
           <label className="text-[10px] font-bold text-slate-500 uppercase">
             Student ID and name
-            <select value={studentId} onChange={event => setStudentId(event.target.value)} className="w-full mt-1 p-2.5 border rounded-lg bg-white text-sm" disabled={!classId} required>
+            <select value={studentId} onChange={event => setStudentId(event.target.value)} className="min-h-12 w-full mt-1 p-2.5 border rounded-xl bg-white text-sm" disabled={!classId} required>
               <option value="">Select student...</option>
               {classStudents.map(student => <option key={student.id} value={student.id}>{student.id} - {student.displayName}</option>)}
             </select>
           </label>
           <label className="text-[10px] font-bold text-slate-500 uppercase">
             Date of assessment
-            <input type="date" value={examDate} onChange={event => setExamDate(event.target.value)} className="w-full mt-1 p-2.5 border rounded-lg bg-white text-sm" required />
+            <input type="date" value={examDate} onChange={event => setExamDate(event.target.value)} className="min-h-12 w-full mt-1 p-2.5 border rounded-xl bg-white text-sm" required />
           </label>
           <label className="text-[10px] font-bold text-slate-500 uppercase">
             Course level
-            <select value={level} onChange={event => setLevel(event.target.value)} className="w-full mt-1 p-2.5 border rounded-lg bg-white text-sm capitalize">
+            <select value={level} onChange={event => setLevel(event.target.value)} className="min-h-12 w-full mt-1 p-2.5 border rounded-xl bg-white text-sm capitalize">
               {LEVELS.map(option => <option key={option} value={option}>{option}</option>)}
             </select>
           </label>
@@ -111,9 +111,9 @@ export default function StudentProgressForm({ classes, students }) {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {SCORE_FIELDS.map(([field, label]) => (
-            <label key={field} className="text-[10px] font-bold text-slate-500 uppercase">
+            <label key={field} className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-[10px] font-bold text-slate-500 uppercase">
               {label} <span className="text-slate-400">(10-100)</span>
-              <input type="number" min="10" max="100" value={scores[field]} onChange={event => handleScoreChange(field, event.target.value)} className="w-full mt-1 p-2.5 border rounded-lg text-sm" required />
+              <input type="number" min="10" max="100" inputMode="numeric" value={scores[field]} onChange={event => handleScoreChange(field, event.target.value)} className="min-h-12 w-full mt-1 p-2.5 border rounded-xl bg-white text-base" required />
             </label>
           ))}
         </div>
@@ -125,11 +125,11 @@ export default function StudentProgressForm({ classes, students }) {
 
         <label className="text-[10px] font-bold text-slate-500 uppercase block">
           Instructor notes
-          <textarea value={notes} onChange={event => setNotes(event.target.value)} placeholder="Add strengths, areas to improve, or follow-up notes..." className="w-full mt-1 p-2.5 border rounded-lg text-sm min-h-24" />
+          <textarea value={notes} onChange={event => setNotes(event.target.value)} placeholder="Add strengths, areas to improve, or follow-up notes..." className="w-full mt-1 p-2.5 border rounded-xl text-base min-h-28" />
         </label>
 
         {message && <p className={`text-xs font-semibold ${message.startsWith("Unable") ? "text-red-600" : "text-green-600"}`}>{message}</p>}
-        <button type="submit" disabled={saving || !classId || !studentId} className="w-full bg-[#1a3a8f] text-white p-3 rounded-xl font-bold hover:bg-[#122b6e] disabled:opacity-50">
+        <button type="submit" disabled={saving || !classId || !studentId} className="min-h-14 w-full bg-[#1a3a8f] text-white p-3 rounded-2xl font-black hover:bg-[#122b6e] active:scale-[0.98] disabled:opacity-50">
           {saving ? "Saving report..." : "Save Progress Report"}
         </button>
       </form>

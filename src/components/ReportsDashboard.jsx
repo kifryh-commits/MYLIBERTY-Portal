@@ -222,23 +222,23 @@ export default function ReportsDashboard({ isAdminView = false, isFrontOffice = 
   }, [subTab, fetchShifts, fetchStudentProgress, fetchInstructorAnalytics]);
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-5 text-sm max-w-5xl mx-auto">
+    <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 space-y-5 text-sm max-w-5xl mx-auto">
       {/* Sub-Tab Switcher - Styled to Navy Theme */}
-      <div className="flex justify-between items-start gap-3 border-b pb-2 print:hidden">
-        <div className="flex gap-2 font-bold text-xs uppercase select-none flex-wrap">
-        {!isFrontOffice && <button onClick={() => setSubTab("staff")} className={`px-3 py-1.5 rounded-lg transition duration-150 ${subTab === "staff" ? "bg-[#1a3a8f] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>💼 Staff Attendance</button>}
-        <button onClick={() => setSubTab("students")} className={`px-3 py-1.5 rounded-lg transition duration-150 ${subTab === "students" ? "bg-[#1a3a8f] text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>🎓 Student Progress</button>
-        <button onClick={() => setSubTab("instructors")} className={`px-3 py-1.5 rounded-lg transition duration-150 ${subTab === "instructors" ? "bg-[#1a3a8f] text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>👩‍🏫 Instructor Analytics</button>
+      <div className="flex flex-col gap-3 border-b pb-3 print:hidden">
+        <div className="grid grid-cols-2 gap-2 font-bold text-xs uppercase select-none">
+        {!isFrontOffice && <button onClick={() => setSubTab("staff")} className={`min-h-12 px-3 py-1.5 rounded-xl transition duration-150 ${subTab === "staff" ? "bg-[#1a3a8f] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>💼 Staff Attendance</button>}
+        <button onClick={() => setSubTab("students")} className={`min-h-12 px-3 py-1.5 rounded-xl transition duration-150 ${subTab === "students" ? "bg-[#1a3a8f] text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>🎓 Student Progress</button>
+        <button onClick={() => setSubTab("instructors")} className={`min-h-12 px-3 py-1.5 rounded-xl transition duration-150 ${subTab === "instructors" ? "bg-[#1a3a8f] text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>👩‍🏫 Instructor Analytics</button>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <label className="text-[10px] font-bold text-slate-500 uppercase">
+        <div className="flex items-end gap-2">
+          <label className="flex-1 text-[10px] font-bold text-slate-500 uppercase">
             Class
-            <select value={selectedClassId} onChange={event => setSelectedClassId(event.target.value)} className="ml-1 p-1.5 border rounded-lg bg-white text-xs normal-case font-normal">
+            <select value={selectedClassId} onChange={event => setSelectedClassId(event.target.value)} className="mt-1 min-h-11 w-full p-1.5 border rounded-xl bg-white text-sm normal-case font-normal">
               <option value="all">All classes</option>
               {classes.map(cls => <option key={cls.id} value={cls.id}>{cls.className}</option>)}
             </select>
           </label>
-          <button onClick={() => window.print()} className="bg-[#1a3a8f] text-white px-3 py-1.5 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-[#122b6e]">🖨️ Print Report</button>
+          <button onClick={() => window.print()} className="min-h-11 bg-[#1a3a8f] text-white px-3 py-1.5 rounded-xl font-bold text-xs whitespace-nowrap hover:bg-[#122b6e]">🖨️ Print</button>
         </div>
       </div>
 
@@ -247,7 +247,7 @@ export default function ReportsDashboard({ isAdminView = false, isFrontOffice = 
           <h3 className="font-bold text-slate-800 text-base">Staff Clock-In/Out History</h3>
           <div className="space-y-2 max-h-72 overflow-y-auto">
             {shifts.map(s => (
-              <div key={s.id} className="flex justify-between items-center p-3 bg-slate-50 border border-slate-150 rounded-xl text-xs hover:bg-slate-100/50 transition">
+              <div key={s.id} className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center p-3 bg-slate-50 border border-slate-150 rounded-xl text-xs hover:bg-slate-100/50 transition">
                 <div>
                   <p className="font-bold text-slate-800">{s.displayName} ({s.role})</p>
                   <p className="text-slate-400 text-[10px] mt-0.5">In: {s.clockIn ? new Date(s.clockIn).toLocaleString() : "N/A"}</p>
@@ -360,7 +360,23 @@ export default function ReportsDashboard({ isAdminView = false, isFrontOffice = 
           ) : analytics.length === 0 ? (
             <p className="text-gray-400 text-center py-6 italic">No recurring classes with a schedule found for this month.</p>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <div className="space-y-3 md:hidden">
+              {analytics.map(a => (
+                <article key={a.instructorId} className="rounded-2xl border border-slate-200 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <h4 className="font-black text-slate-800">{a.instructorName}</h4>
+                    <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${a.punctualityRate === null ? "bg-gray-100 text-gray-500" : a.punctualityRate >= 90 ? "bg-green-100 text-green-800" : a.punctualityRate >= 70 ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"}`}>{a.punctualityRate === null ? "N/A" : `${a.punctualityRate}% on time`}</span>
+                  </div>
+                  <dl className="mt-3 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 text-center text-xs">
+                    <div><dt className="text-slate-400">Scheduled</dt><dd className="mt-1 font-black text-slate-800">{a.sessionsScheduled}</dd></div>
+                    <div><dt className="text-slate-400">Attended</dt><dd className="mt-1 font-black text-slate-800">{a.sessionsAttended}</dd></div>
+                    <div><dt className="text-slate-400">Late</dt><dd className="mt-1 font-black text-amber-700">{a.late}</dd></div>
+                  </dl>
+                </article>
+              ))}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 text-slate-500 uppercase text-[10px]">
@@ -406,6 +422,7 @@ export default function ReportsDashboard({ isAdminView = false, isFrontOffice = 
                 </tbody>
               </table>
             </div>
+            </>
           )}
           <p className="text-slate-300 text-[10px]">
             Limited accuracy means the row includes a legacy shift or a class without a saved start date. "Private" classes and classes without a saved start time aren't included.
