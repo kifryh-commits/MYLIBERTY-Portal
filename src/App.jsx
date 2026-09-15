@@ -8,6 +8,7 @@ import RegistrationPage from "./components/RegistrationPage";
 
 // Import your role dashboard files!
 import AdminDashboard from "./components/AdminDashboard";
+import FrontOfficeDashboard from "./components/FrontOfficeDashboard";
 import ManagerDashboard from "./components/ManagerDashboard";
 import InstructorDashboard from "./components/InstructorDashboard";
 import StaffDashboard from "./components/StaffDashboard";
@@ -159,7 +160,7 @@ function App() {
         {role === "admin" && <AdminDashboard />}
         {role === "manager" && <ManagerDashboard />}
         {role === "instructor" && <InstructorDashboard />}
-        {role === "frontoffice" && <AdminDashboard isFrontOffice />}
+        {role === "frontoffice" && <FrontOfficeDashboard />}
         {role === "marketing" && <StaffDashboard />}
         {role === "officeboy" && <OfficeBoyDashboard />}
         {!["admin", "manager", "instructor", "marketing", "frontoffice", "officeboy"].includes(role) && (
