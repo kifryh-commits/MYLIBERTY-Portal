@@ -3,7 +3,7 @@ import PaymentModal from "./PaymentModal";
 import { printHtmlTable } from "../utils/printTable";
 import { useToast } from "./ui/useToast";
 
-export default function StudentRoster({ students, getStudentClasses, setSelectedStudent, handleEdit, handleDelete, fetchData }) {
+export default function StudentRoster({ students, getStudentClasses, setSelectedStudent, handleEdit, handleDelete, fetchData, readOnly = false }) {
   const toast = useToast();
   const [paymentStudent, setPaymentStudent] = useState(null);
   // Sort states live cleanly inside this sub-component now!
@@ -108,7 +108,9 @@ export default function StudentRoster({ students, getStudentClasses, setSelected
               <th className="p-3">Payment</th>
               <th className="p-3">Class</th>
               <th className="p-3">Instructor</th>
-              <th className="p-3 text-right rounded-tr-lg">Actions</th>
+              {(!readOnly || setSelectedStudent) && (
+                <th className="p-3 text-right rounded-tr-lg">Actions</th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -134,13 +136,19 @@ export default function StudentRoster({ students, getStudentClasses, setSelected
                     {s.effectiveJoinedDate || "N/A"}
                   </td>
                   <td className="p-3">
-                    <button 
-                      onClick={() => setPaymentStudent(s)}
-                      title="Click to record payment, view history, or issue receipt"
-                      className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter transition shadow-sm hover:ring-2 hover:ring-offset-1 ${s.paymentStatus === "paid" ? "bg-emerald-100 text-emerald-700 border border-emerald-200 hover:ring-emerald-400" : "bg-rose-100 text-rose-700 border border-rose-200 hover:ring-rose-400"}`}
-                    >
-                      {s.paymentStatus === "paid" ? "💰 Paid" : "⚠️ Pending"}
-                    </button>
+                    {readOnly ? (
+                      <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter ${s.paymentStatus === "paid" ? "bg-emerald-100 text-emerald-700 border border-emerald-200" : "bg-rose-100 text-rose-700 border border-rose-200"}`}>
+                        {s.paymentStatus === "paid" ? "💰 Paid" : "⚠️ Pending"}
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => setPaymentStudent(s)}
+                        title="Click to record payment, view history, or issue receipt"
+                        className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter transition shadow-sm hover:ring-2 hover:ring-offset-1 ${s.paymentStatus === "paid" ? "bg-emerald-100 text-emerald-700 border border-emerald-200 hover:ring-emerald-400" : "bg-rose-100 text-rose-700 border border-rose-200 hover:ring-rose-400"}`}
+                      >
+                        {s.paymentStatus === "paid" ? "💰 Paid" : "⚠️ Pending"}
+                      </button>
+                    )}
                     {s.lastPaymentPeriod && (
                       <p className="text-[10px] text-slate-400 mt-0.5 font-medium whitespace-nowrap">
                         {s.lastPaymentPeriod}
@@ -169,14 +177,21 @@ export default function StudentRoster({ students, getStudentClasses, setSelected
                       ))
                     )}
                   </td>
-                  <td className="p-3 text-right font-bold">
-                    <div className="flex gap-2 justify-end">
-                      <button onClick={() => setSelectedStudent(s)} className="bg-green-600 text-white px-3 py-1 rounded font-bold hover:bg-green-700 text-xs transition shadow-sm">Badge</button>
-                      <button onClick={() => handleEdit(s)} className="bg-blue-500 text-white px-3 py-1 rounded font-bold hover:bg-blue-600 text-xs transition shadow-sm">Edit</button>
-                      {/* 👈 Added Delete Button */}
-                      <button onClick={() => handleDelete(s.id)} className="bg-red-50 text-red-600 border border-red-200 px-3 py-1 rounded font-bold hover:bg-red-500 hover:text-white text-xs transition shadow-sm">Delete</button>
-                    </div>
-                  </td>
+                  {(!readOnly || setSelectedStudent) && (
+                    <td className="p-3 text-right font-bold">
+                      <div className="flex gap-2 justify-end">
+                        {setSelectedStudent && (
+                          <button onClick={() => setSelectedStudent(s)} className="bg-green-600 text-white px-3 py-1 rounded font-bold hover:bg-green-700 text-xs transition shadow-sm">Badge</button>
+                        )}
+                        {!readOnly && (
+                          <>
+                            <button onClick={() => handleEdit(s)} className="bg-blue-500 text-white px-3 py-1 rounded font-bold hover:bg-blue-600 text-xs transition shadow-sm">Edit</button>
+                            <button onClick={() => handleDelete(s.id)} className="bg-red-50 text-red-600 border border-red-200 px-3 py-1 rounded font-bold hover:bg-red-500 hover:text-white text-xs transition shadow-sm">Delete</button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  )}
                 </tr>
               );
             })}
@@ -184,7 +199,7 @@ export default function StudentRoster({ students, getStudentClasses, setSelected
         </table>
       </div>
 
-      {paymentStudent && (
+      {!readOnly && paymentStudent && (
         <PaymentModal
           student={students.find(s => s.id === paymentStudent.id) || paymentStudent}
           onClose={() => setPaymentStudent(null)}

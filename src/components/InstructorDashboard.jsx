@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { auth, db } from "../firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, getDoc, doc } from "firebase/firestore";
 import DashboardShell from "./DashboardShell";
 import Kiosk from "./Kiosk";
 import ClassPhotoShare from "./ClassPhotoShare";
@@ -8,6 +8,8 @@ import ReportsDashboard from "./ReportsDashboard";
 import TeachingMaterial from "./TeachingMaterial";
 import AIAssistant from "./AIAssistant";
 import StudentProgressForm from "./StudentProgressForm";
+import StudentRoster from "./StudentRoster";
+import BadgeModal from "./BadgeModal";
 
 function uniqueClasses(classes) {
   const seen = new Set();
@@ -53,108 +55,79 @@ function InstructorProgress() {
 function InstructorClasses() {
   const [classes, setClasses] = useState([]);
   const [students, setStudents] = useState([]);
-  const [expandedClassId, setExpandedClassId] = useState(null);
+  const [instructorName, setInstructorName] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const uid = auth.currentUser?.uid;
 
   useEffect(() => {
     (async () => {
       try {
-        // 1. Fetch assigned classes
-        const qClasses = query(collection(db, "classes"), where("instructorId", "==", uid));
-        const classSnap = await getDocs(qClasses);
-        setClasses(classSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-
-        // 2. Fetch all student profiles to map details safely (Allowed by your updated Rules!)
-        const qStudents = query(collection(db, "users"), where("role", "==", "student"));
-        const studentSnap = await getDocs(qStudents);
-        setStudents(studentSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        const [classSnap, studentSnap, meSnap] = await Promise.all([
+          getDocs(query(collection(db, "classes"), where("instructorId", "==", uid))),
+          getDocs(query(collection(db, "users"), where("role", "==", "student"))),
+          getDoc(doc(db, "users", uid)),
+        ]);
+        const myClasses = classSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const enrolledIds = new Set(myClasses.flatMap(cls => cls.studentIds || []));
+        setClasses(myClasses);
+        setStudents(studentSnap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(student => enrolledIds.has(student.id)));
+        setInstructorName(meSnap.exists() ? (meSnap.data().displayName || "") : "");
       } catch (err) {
         console.error("Fetch Error: ", err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     })();
   }, [uid]);
 
-  const toggleExpand = (classId) => {
-    setExpandedClassId(expandedClassId === classId ? null : classId);
+  const getStudentClasses = (studentId) => {
+    return classes
+      .filter(cls => (cls.studentIds || []).includes(studentId))
+      .map(cls => ({
+        className: cls.className,
+        instructorName: instructorName || "Unassigned",
+        dateJoined: (cls.enrollments || []).find(enrollment => enrollment.studentId === studentId)?.dateJoined || "",
+      }));
   };
 
+  if (loading) return <p className="text-gray-400 text-center py-8">Loading your students...</p>;
+  if (error) return <div className="bg-red-50 border border-red-200 text-red-700 p-5 rounded-xl max-w-2xl mx-auto text-sm">Unable to load your class roster: {error}</div>;
+  if (classes.length === 0) return <div className="bg-amber-50 border border-amber-200 text-amber-800 p-5 rounded-xl max-w-2xl mx-auto text-sm">No classes are assigned to this instructor yet. Ask an admin to assign a class to this account.</div>;
+
+  const worksheets = classes.filter(cls => cls.worksheetUrl);
+
   return (
-    <div className="bg-white p-4 rounded-xl border max-w-2xl mx-auto text-xs">
-      <h3 className="font-bold text-gray-700 text-sm mb-3">Your Active Classes</h3>
-      {loading ? (
-        <p className="text-gray-400 text-center py-4">Loading...</p>
-      ) : classes.length === 0 ? (
-        <p className="text-gray-400 text-center py-4">No classes assigned yet.</p>
-      ) : (
-        <div className="space-y-3">
-          {classes.map(cls => {
-            const isExpanded = expandedClassId === cls.id;
-            return (
-              <div key={cls.id} className="p-3 bg-gray-50 border rounded-lg transition-all">
-                {/* Header: Click to expand roster */}
-                <div onClick={() => toggleExpand(cls.id)} className="cursor-pointer flex justify-between items-center">
-                  <div>
-                    <p className="font-bold text-gray-800 text-sm">{cls.className}</p>
-                    <p className="text-gray-500 text-[10px]">{cls.schedule}</p>
-                    <p className="text-indigo-600 font-semibold text-[10px] mt-0.5">
-                      {(cls.studentIds || []).length} student(s) enrolled
-                    </p>
-                  </div>
-                  <span className="text-gray-400 font-extrabold text-sm">{isExpanded ? "▲" : "▼"}</span>
-                </div>
-
-                {/* Worksheet link from Admin */}
-                {cls.worksheetUrl && (
-                  <div className="mt-2 pt-2 border-t border-gray-200 text-[10px] text-green-700 font-bold flex items-center gap-1">
-                    <span>📄</span>
-                    <a href={cls.worksheetUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                      View Admin Worksheet
-                    </a>
-                  </div>
-                )}
-
-                {/* Expanded Student List */}
-                {isExpanded && (
-                  <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
-                    <p className="font-bold text-gray-600 text-[9px] uppercase tracking-wider">Enrolled Student Roster:</p>
-                    {(cls.studentIds || []).length === 0 ? (
-                      <p className="text-gray-400 italic text-[10px]">No students enrolled yet.</p>
-                    ) : (
-                      <div className="divide-y divide-gray-100">
-                        {(cls.studentIds || []).map(sid => {
-                          const sInfo = students.find(s => s.id === sid);
-                          if (!sInfo) return <p key={sid} className="py-1.5 text-gray-400 italic">Student details loading...</p>;
-                          return (
-                            <div key={sid} className="py-2 flex justify-between items-start gap-1">
-                              <div>
-                                <p className="font-bold text-gray-800">{sInfo.displayName}</p>
-                                <p className="text-gray-500 text-[10px]">
-                                  Parent: {sInfo.parentName || "N/A"} ({sInfo.parentPhone || "N/A"})
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <span className="bg-yellow-100 text-yellow-800 text-[8px] font-bold px-1.5 py-0.5 rounded uppercase">
-                                  ⭐ {sInfo.rating || "1"}/5
-                                </span>
-                                <p className="text-gray-400 text-[9px] mt-1 max-w-[150px] truncate" title={sInfo.notes}>
-                                  {sInfo.notes || "No notes"}
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+    <div className="space-y-4">
+      {worksheets.length > 0 && (
+        <div className="bg-white p-4 rounded-xl border border-slate-200 max-w-6xl mx-auto text-sm">
+          <p className="font-bold text-slate-700 mb-2">Class worksheets</p>
+          <div className="flex flex-wrap gap-2">
+            {worksheets.map(cls => (
+              <a
+                key={cls.id}
+                href={cls.worksheetUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-green-700 font-bold text-xs hover:underline"
+              >
+                📄 {cls.className}
+              </a>
+            ))}
+          </div>
         </div>
       )}
+      <StudentRoster
+        readOnly
+        students={students}
+        getStudentClasses={getStudentClasses}
+        setSelectedStudent={setSelectedStudent}
+      />
+      <BadgeModal person={selectedStudent} onClose={() => setSelectedStudent(null)} />
     </div>
   );
 }
