@@ -46,6 +46,10 @@ export default function ClassManager({ classes, users, instructors, unenrolledSt
   // 👈 New: which grouped rows are expanded in the Active Classes table
   const [expandedGroups, setExpandedGroups] = useState(new Set());
 
+  // 👈 New: inline "set level" editor for legacy classes with no classLevel yet
+  const [editingLevelKey, setEditingLevelKey] = useState(null);
+  const [pendingLevel, setPendingLevel] = useState("warrior");
+
   const handleCreateClass = async (e) => {
     e.preventDefault();
 
@@ -198,6 +202,23 @@ export default function ClassManager({ classes, users, instructors, unenrolledSt
     }
     groupIndex[key].items.push(cls);
   });
+
+  // 👈 New: writes classLevel onto every batch in a legacy group (and syncs
+  // their enrolled students' currentLevel), fixing an "Unset" row for good.
+  const handleSetGroupLevel = async (group, level) => {
+    try {
+      await Promise.all(group.items.map(cls =>
+        updateDoc(doc(db, "classes", cls.id), {
+          classLevel: level,
+          enrollments: (cls.enrollments || []).map(en => ({ ...en, level })),
+        })
+      ));
+      const studentIds = [...new Set(group.items.flatMap(cls => cls.studentIds || []))];
+      await Promise.all(studentIds.map(id => updateDoc(doc(db, "users", id), { currentLevel: level }).catch(() => {})));
+      setEditingLevelKey(null);
+      fetchData();
+    } catch (err) { alert("Error setting level: " + err.message); }
+  };
 
   const toggleGroup = (key) => {
     setExpandedGroups(prev => {
@@ -442,7 +463,23 @@ export default function ClassManager({ classes, users, instructors, unenrolledSt
                           <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{group.items.length} batches</p>
                         )}
                       </td>
-                      <td className="p-3"><LevelBadge level={group.classLevel} /></td>
+                      <td className="p-3" onClick={e => e.stopPropagation()}>
+                        {group.classLevel ? (
+                          <LevelBadge level={group.classLevel} />
+                        ) : editingLevelKey === group.key ? (
+                          <div className="flex items-center gap-1">
+                            <select value={pendingLevel} onChange={e => setPendingLevel(e.target.value)} className="text-[10px] border rounded p-1 bg-white font-bold">
+                              {LEVELS.map(lvl => <option key={lvl} value={lvl}>{lvl.charAt(0).toUpperCase() + lvl.slice(1)}</option>)}
+                            </select>
+                            <button onClick={() => handleSetGroupLevel(group, pendingLevel)} className="text-[10px] font-bold text-emerald-600 hover:underline">Save</button>
+                            <button onClick={() => setEditingLevelKey(null)} className="text-[10px] font-bold text-slate-400 hover:underline">✕</button>
+                          </div>
+                        ) : (
+                          <button onClick={() => { setEditingLevelKey(group.key); setPendingLevel("warrior"); }} className="text-[10px] font-bold text-amber-600 hover:underline">
+                            Unset · Set level
+                          </button>
+                        )}
+                      </td>
                       <td className="p-3 text-indigo-700 font-semibold">{teacher ? teacher.displayName : "Unassigned"}</td>
                       <td className="p-3 font-semibold text-slate-600">{group.schedule}</td>
                       <td className="p-3 font-semibold text-slate-700">{totalStudents} enrolled</td>
