@@ -1,20 +1,30 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import ProfilePanel from "./components/ProfilePanel";
 import LoginPage from "./components/LoginPage";
-import RegistrationPage from "./components/RegistrationPage";
 import { useToast } from "./components/ui/useToast";
 
-// Import your role dashboard files!
-import AdminDashboard from "./components/AdminDashboard";
-import FrontOfficeDashboard from "./components/FrontOfficeDashboard";
-import ManagerDashboard from "./components/ManagerDashboard";
-import InstructorDashboard from "./components/InstructorDashboard";
-import StaffDashboard from "./components/StaffDashboard";
-import StaffSignup from "./components/StaffSignup";
-import OfficeBoyDashboard from "./components/OfficeBoyDashboard";
+// Code-split: each of these becomes its own downloaded chunk, fetched
+// only when actually needed — an instructor's browser never downloads
+// Admin's code, a marketing user never downloads the Kiosk/QR logic, etc.
+const RegistrationPage = lazy(() => import("./components/RegistrationPage"));
+const StaffSignup = lazy(() => import("./components/StaffSignup"));
+const AdminDashboard = lazy(() => import("./components/AdminDashboard"));
+const FrontOfficeDashboard = lazy(() => import("./components/FrontOfficeDashboard"));
+const ManagerDashboard = lazy(() => import("./components/ManagerDashboard"));
+const InstructorDashboard = lazy(() => import("./components/InstructorDashboard"));
+const StaffDashboard = lazy(() => import("./components/StaffDashboard"));
+const OfficeBoyDashboard = lazy(() => import("./components/OfficeBoyDashboard"));
+
+function LoadingFallback() {
+  return (
+    <div className="bg-gray-50 min-h-screen flex items-center justify-center">
+      <p className="text-gray-500 text-sm">Loading...</p>
+    </div>
+  );
+}
 
 function getInitials(name) {
   if (!name) return "?";
@@ -102,12 +112,20 @@ function App() {
 
   // Public route — no login required.
   if (window.location.pathname === "/register") {
-    return <RegistrationPage />;
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <RegistrationPage />
+      </Suspense>
+    );
   }
 
   // 👈 New Public route for staff invitation links
   if (window.location.pathname.startsWith("/join/")) {
-    return <StaffSignup />;
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <StaffSignup />
+      </Suspense>
+    );
   }
 
   // 👈 3. Re-engineered to receive inputs from LoginPage
@@ -123,11 +141,7 @@ function App() {
   };
 
   if (checkingAuth) {
-    return (
-      <div className="bg-gray-50 min-h-screen flex items-center justify-center">
-        <p className="text-gray-500 text-sm">Loading...</p>
-      </div>
-    );
+    return <LoadingFallback />;
   }
 
   // 👈 4. Render your beautiful, dedicated LoginPage
@@ -158,18 +172,21 @@ function App() {
       </div>
 
       <div className="p-4 md:p-6 max-w-[1800px] mx-auto">
-        {/* Dynamic Role Router Switcher */}
-        {role === "admin" && <AdminDashboard />}
-        {role === "manager" && <ManagerDashboard />}
-        {role === "instructor" && <InstructorDashboard />}
-        {role === "frontoffice" && <FrontOfficeDashboard />}
-        {role === "marketing" && <StaffDashboard />}
-        {role === "officeboy" && <OfficeBoyDashboard />}
-        {!["admin", "manager", "instructor", "marketing", "frontoffice", "officeboy"].includes(role) && (
-          <div className="bg-white p-6 rounded-xl border text-center text-gray-500 text-sm max-w-md mx-auto">
-            This account doesn't have dashboard access. Please contact your administrator.
-          </div>
-        )}
+        {/* Dynamic Role Router Switcher — each branch is its own chunk,
+            only the matching one is ever fetched for a given user */}
+        <Suspense fallback={<LoadingFallback />}>
+          {role === "admin" && <AdminDashboard />}
+          {role === "manager" && <ManagerDashboard />}
+          {role === "instructor" && <InstructorDashboard />}
+          {role === "frontoffice" && <FrontOfficeDashboard />}
+          {role === "marketing" && <StaffDashboard />}
+          {role === "officeboy" && <OfficeBoyDashboard />}
+          {!["admin", "manager", "instructor", "marketing", "frontoffice", "officeboy"].includes(role) && (
+            <div className="bg-white p-6 rounded-xl border text-center text-gray-500 text-sm max-w-md mx-auto">
+              This account doesn't have dashboard access. Please contact your administrator.
+            </div>
+          )}
+        </Suspense>
       </div>
 
       {profileOpen && (
